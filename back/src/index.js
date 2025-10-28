@@ -1,14 +1,16 @@
 const express = require('express');
 const entryRoutes = require('./routes/entryRoutes');
+const userRoutes = require('./routes/userRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use('/api/entries', entryRoutes);
+app.use('/api/users', userRoutes);
 
 app.get('/', (req, res) => {
-  res.json({ mensagem: 'API está ativa. Utilize /api/entries.' });
+  res.json({ mensagem: 'API está ativa. Utilize /api/entries e /api/users.' });
 });
 
 app.use((req, res) => {
