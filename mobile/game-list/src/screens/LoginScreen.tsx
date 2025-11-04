@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, TouchableOpacity } from 'react-native';
+import { Alert, KeyboardAvoidingView, Platform, TouchableOpacity, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import styled from '../utils/styled';
 import { theme } from '../../constants/theme';
-import { ScrollContainer } from '../components/atoms/Container';
 import Button from '../components/atoms/Button';
 import Input from '../components/atoms/Input';
 import { Ionicons } from '@expo/vector-icons';
@@ -81,6 +80,10 @@ const SignUpLink = styled.Text`
   color: ${theme.colors.primary};
   font-size: ${theme.fonts.size.medium}px;
   font-weight: 600;
+`;
+
+const ScrollContent = styled(ScrollView)`
+  flex: 1;
 `;
 
 export default function LoginScreen() {
@@ -163,9 +166,10 @@ export default function LoginScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
       >
-        <ScrollContainer
+        <ScrollContent
           contentContainerStyle={{ flexGrow: 1 }}
           keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
           <Header>
             <LogoContainer>
@@ -229,7 +233,7 @@ export default function LoginScreen() {
               </TouchableOpacity>
             </SignUpContainer>
           </Footer>
-        </ScrollContainer>
+        </ScrollContent>
       </KeyboardAvoidingView>
     </Container>
   );

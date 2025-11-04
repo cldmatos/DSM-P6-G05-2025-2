@@ -1,30 +1,20 @@
-/**
- * Theme Configuration
- * Mantém a mesma identidade visual do front web
- * Paleta extraída de: front/app/globals.css
- */
-
 export const theme = {
   colors: {
-    // Cores principais (extraídas do globals.css)
     background: '#1A1A1A',
     foreground: '#EEEEDD',
     primary: '#05DBF2',
     secondary: '#0788D9',
     muted: '#999999',
 
-    // Cores adicionais
     accent: '#05DBF2',
     border: 'rgba(7, 136, 217, 0.2)',
     cardBackground: 'rgba(7, 136, 217, 0.1)',
     error: '#FF4444',
     success: '#00C853',
 
-    // Transparências
     overlay: 'rgba(0, 0, 0, 0.7)',
     shadowColor: 'rgba(5, 219, 242, 0.3)',
 
-    // Navegação
     tabIconDefault: '#999999',
     tabIconSelected: '#05DBF2',
   },
@@ -90,7 +80,6 @@ export const theme = {
 
 export type Theme = typeof theme;
 
-// Mantendo compatibilidade com código existente
 export const Colors = {
   dark: {
     text: theme.colors.foreground,

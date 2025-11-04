@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { FlatList, RefreshControl, ActivityIndicator } from 'react-native';
+import { FlatList, RefreshControl, ActivityIndicator, SafeAreaView } from 'react-native';
 import { useRouter } from 'expo-router';
 import styled from '../utils/styled';
 import { theme } from '../../constants/theme';
-import { SafeContainer, Title, Text, Spacer } from '../components/atoms/Container';
+import { Title, Text, Spacer } from '../components/atoms/Container';
 import GameCard from '../components/molecules/GameCard';
 // import ApiService from '../services/api';
 import { Game } from '../types';
@@ -37,6 +37,11 @@ const EmptyContainer = styled.View`
   justify-content: center;
   align-items: center;
   padding: ${theme.spacing.xl}px;
+`;
+
+const SafeScreen = styled(SafeAreaView)`
+  flex: 1;
+  background-color: ${theme.colors?.background ?? '#0a0a0a'};
 `;
 
 export default function HomeScreen() {
@@ -106,20 +111,20 @@ export default function HomeScreen() {
 
   if (loading) {
     return (
-      <SafeContainer>
+      <SafeScreen>
         <LoadingContainer>
           <ActivityIndicator size="large" color={theme.colors.primary} />
           <Spacer />
           <Text>Carregando jogos...</Text>
         </LoadingContainer>
-      </SafeContainer>
+      </SafeScreen>
     );
   }
 
   const allGames = [...recommendedGames, ...popularGames];
 
   return (
-    <SafeContainer>
+    <SafeScreen>
       <FlatList
         data={allGames}
         keyExtractor={(item) => item.id.toString()}
@@ -160,6 +165,6 @@ export default function HomeScreen() {
         }
         contentContainerStyle={{ paddingBottom: theme.spacing.xl }}
       />
-    </SafeContainer>
+    </SafeScreen>
   );
 }

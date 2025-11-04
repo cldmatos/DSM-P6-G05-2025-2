@@ -6,11 +6,11 @@ class UserModel {
   }
 
   static findByNome(nome) {
-    return users.find(u => u.nome === nome);
+    return users.find((u) => u.nome === nome);
   }
 
   static findByEmail(email) {
-    return users.find(u => u.email === email);
+    return users.find((u) => u.email === email);
   }
 
   static create({ nome, email, categorias, passwordHash, salt }) {
@@ -21,7 +21,7 @@ class UserModel {
       categorias,
       passwordHash,
       salt,
-      criadoEm: new Date().toISOString()
+      criadoEm: new Date().toISOString(),
     };
 
     users.push(newUser);
