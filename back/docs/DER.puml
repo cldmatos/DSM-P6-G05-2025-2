@@ -1,0 +1,47 @@
+@startuml
+left to right direction
+hide circle
+hide methods
+hide stereotypes
+
+entity "users" as Users {
+  *id : INT AUTO_INCREMENT
+  --
+  nome : VARCHAR(120) NOT NULL
+  email : VARCHAR(255) NOT NULL <<UNIQUE>>
+  password_hash : VARBINARY(128) NOT NULL
+  salt : VARBINARY(64) NOT NULL
+  criado_em : DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+}
+
+entity "categories" as Categories {
+  *id : INT AUTO_INCREMENT
+  --
+  nome : VARCHAR(120) NOT NULL
+  slug : VARCHAR(120) NOT NULL <<UNIQUE>>
+  criado_em : DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+}
+
+entity "user_categories" as UserCategories {
+  *user_id : INT
+  *category_id : INT
+  --
+  preferencia_ordem : TINYINT
+  criado_em : DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+}
+
+entity "entries" as Entries {
+  *id : INT AUTO_INCREMENT
+  --
+  user_id : INT
+  nome : VARCHAR(120) NOT NULL
+  idade : INT
+  valor : DECIMAL(10,2)
+  criado_em : DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+}
+
+Users ||--o{ Entries : "1:N"
+Users ||--o{ UserCategories
+Categories ||--o{ UserCategories
+
+@enduml

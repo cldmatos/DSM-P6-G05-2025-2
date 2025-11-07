@@ -1,0 +1,35 @@
+@startuml
+left to right direction
+hide circle
+hide methods
+hide stereotypes
+
+entity "Usuário" as Usuario {
+  *id
+  --
+  nome
+  email
+  categorias (preferências)
+  criadoEm
+}
+
+entity "Categoria" as Categoria {
+  *id
+  --
+  nome
+  origem
+}
+
+entity "Registro" as Registro {
+  *id
+  --
+  nome
+  idade
+  valor
+  criadoEm
+}
+
+Usuario }o--o{ Categoria : "seleciona"
+Usuario ||--o{ Registro : "gera"
+
+@enduml
