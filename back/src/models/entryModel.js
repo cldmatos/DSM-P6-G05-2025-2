@@ -11,7 +11,7 @@ class EntryModel {
       nome: data.nome,
       idade: data.idade,
       valor: data.valor,
-      criadoEm: new Date().toISOString()
+      criadoEm: new Date().toISOString(),
     };
 
     entries.push(newEntry);

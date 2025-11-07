@@ -1,16 +1,16 @@
-const EntryModel = require('../models/entryModel');
+const EntryModel = require("../models/entryModel");
 
 function validatePayload(payload) {
   const errors = [];
 
-  if (!payload || typeof payload !== 'object') {
-    errors.push('Corpo da requisição inválido.');
+  if (!payload || typeof payload !== "object") {
+    errors.push("Corpo da requisição inválido.");
     return errors;
   }
 
   const { nome, idade, valor } = payload;
 
-  if (!nome || typeof nome !== 'string') {
+  if (!nome || typeof nome !== "string") {
     errors.push('"nome" é obrigatório e deve ser uma string.');
   }
 
@@ -42,11 +42,13 @@ const entryController = {
     const novoRegistro = EntryModel.create({
       nome,
       idade: Number(idade),
-      valor: Number(valor)
+      valor: Number(valor),
     });
 
-    return res.status(201).json({ mensagem: 'Registro criado com sucesso.', dados: novoRegistro });
-  }
+    return res
+      .status(201)
+      .json({ mensagem: "Registro criado com sucesso.", dados: novoRegistro });
+  },
 };
 
 module.exports = entryController;

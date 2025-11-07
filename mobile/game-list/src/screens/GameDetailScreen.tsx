@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Dimensions } from 'react-native';
+import { ActivityIndicator, Dimensions, SafeAreaView, ScrollView } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import styled from '../utils/styled';
 import { theme } from '../../constants/theme';
-import { SafeContainer, ScrollContainer, Title, Text, Spacer } from '../components/atoms/Container';
+import { Title, Text, Spacer } from '../components/atoms/Container';
 import Button from '../components/atoms/Button';
 import { Ionicons } from '@expo/vector-icons';
 import { Game } from '../types';
@@ -51,6 +51,15 @@ const LoadingContainer = styled.View`
   align-items: center;
 `;
 
+const SafeScreen = styled(SafeAreaView)`
+  flex: 1;
+  background-color: ${theme.colors?.background ?? '#0a0a0a'};
+`;
+
+const ScrollContent = styled(ScrollView)`
+  flex: 1;
+`;
+
 export default function GameDetailScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
@@ -87,31 +96,31 @@ export default function GameDetailScreen() {
 
   if (loading) {
     return (
-      <SafeContainer>
+      <SafeScreen>
         <LoadingContainer>
           <ActivityIndicator size="large" color={theme.colors.primary} />
           <Spacer />
           <Text>Carregando detalhes...</Text>
         </LoadingContainer>
-      </SafeContainer>
+      </SafeScreen>
     );
   }
 
   if (!game) {
     return (
-      <SafeContainer>
+      <SafeScreen>
         <LoadingContainer>
           <Text>Jogo não encontrado</Text>
           <Spacer />
           <Button onPress={() => router.back()}>Voltar</Button>
         </LoadingContainer>
-      </SafeContainer>
+      </SafeScreen>
     );
   }
 
   return (
-    <SafeContainer>
-      <ScrollContainer>
+    <SafeScreen>
+      <ScrollContent showsVerticalScrollIndicator={false}>
         <HeaderImage source={{ uri: game.image }} resizeMode="cover" />
 
         <Content>
@@ -162,7 +171,7 @@ export default function GameDetailScreen() {
             Voltar
           </Button>
         </Content>
-      </ScrollContainer>
-    </SafeContainer>
+      </ScrollContent>
+    </SafeScreen>
   );
 }

@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, ActivityIndicator } from 'react-native';
+import { Alert, ActivityIndicator, SafeAreaView, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import styled from '../utils/styled';
 import { theme } from '../../constants/theme';
-import { SafeContainer, ScrollContainer, Title, Text, Spacer, Card } from '../components/atoms/Container';
+import { Title, Text, Spacer, Card } from '../components/atoms/Container';
 import Button from '../components/atoms/Button';
 import { Ionicons } from '@expo/vector-icons';
 import ApiService from '../services/api';
@@ -66,6 +66,15 @@ const LoadingContainer = styled.View`
   align-items: center;
 `;
 
+const SafeScreen = styled(SafeAreaView)`
+  flex: 1;
+  background-color: ${theme.colors?.background ?? '#0a0a0a'};
+`;
+
+const ScrollContent = styled(ScrollView)`
+  flex: 1;
+`;
+
 export default function ProfileScreen() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -116,25 +125,25 @@ export default function ProfileScreen() {
 
   if (loading) {
     return (
-      <SafeContainer>
+      <SafeScreen>
         <LoadingContainer>
           <ActivityIndicator size="large" color={theme.colors.primary} />
           <Spacer />
           <Text>Carregando perfil...</Text>
         </LoadingContainer>
-      </SafeContainer>
+      </SafeScreen>
     );
   }
 
   if (!user) {
     return (
-      <SafeContainer>
+      <SafeScreen>
         <LoadingContainer>
           <Text>Erro ao carregar perfil</Text>
           <Spacer />
           <Button onPress={loadProfile}>Tentar novamente</Button>
         </LoadingContainer>
-      </SafeContainer>
+      </SafeScreen>
     );
   }
 
@@ -148,8 +157,8 @@ export default function ProfileScreen() {
   };
 
   return (
-    <SafeContainer>
-      <ScrollContainer>
+    <SafeScreen>
+      <ScrollContent contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
         <Header>
           <Avatar>
             <AvatarText>{getInitials(user.name)}</AvatarText>
@@ -157,7 +166,6 @@ export default function ProfileScreen() {
           <UserName>{user.name}</UserName>
           <UserEmail>{user.email}</UserEmail>
         </Header>
-
         <Content>
           <Title>Informações da Conta</Title>
 
@@ -189,7 +197,7 @@ export default function ProfileScreen() {
             Sair da Conta
           </Button>
         </Content>
-      </ScrollContainer>
-    </SafeContainer>
+      </ScrollContent>
+    </SafeScreen>
   );
 }
