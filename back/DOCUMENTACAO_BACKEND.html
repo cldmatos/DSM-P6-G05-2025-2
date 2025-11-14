@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentação Backend - Sistema de Recomendação de Games</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            line-height: 1.8;
+        }
+        
+        header {
+            text-align: center;
+            border-bottom: 3px solid #0788D9;
+            padding-bottom: 30px;
+            margin-bottom: 40px;
+        }
+        
+        h1 {
+            color: #0788D9;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 1.1em;
+            margin-bottom: 5px;
+        }
+        
+        .version {
+            color: #999;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+        
+        h2 {
+            color: #0788D9;
+            font-size: 1.8em;
+            margin-top: 35px;
+            margin-bottom: 15px;
+            border-left: 5px solid #0788D9;
+            padding-left: 15px;
+            page-break-after: avoid;
+        }
+        
+        h3 {
+            color: #05DBF2;
+            font-size: 1.3em;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            page-break-after: avoid;
+        }
+        
+        h4 {
+            color: #333;
+            font-size: 1.1em;
+            margin-top: 15px;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        
+        p {
+            margin-bottom: 12px;
+            text-align: justify;
+        }
+        
+        code {
+            background: #f0f0f0;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            color: #d63384;
+        }
+        
+        pre {
+            background: #1a1a1a;
+            color: #0f0;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-size: 0.85em;
+            page-break-inside: avoid;
+        }
+        
+        pre code {
+            color: #0f0;
+            background: none;
+            padding: 0;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            page-break-inside: avoid;
+        }
+        
+        th {
+            background: #0788D9;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+        
+        tr:hover {
+            background: #f0f0f0;
+        }
+        
+        .endpoint {
+            background: #f0f8ff;
+            border-left: 4px solid #05DBF2;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 3px;
+            page-break-inside: avoid;
+        }
+        
+        .method {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-weight: 600;
+            margin-right: 10px;
+            font-size: 0.9em;
+        }
+        
+        .method.get {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+        
+        .method.post {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+        
+        .method.put {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+        
+        .method.delete {
+            background: #ffebee;
+            color: #c62828;
+        }
+        
+        .path {
+            font-family: 'Courier New', monospace;
+            color: #d63384;
+            margin: 8px 0;
+        }
+        
+        .section-box {
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+            page-break-inside: avoid;
+        }
+        
+        .highlight {
+            background: #ffffcc;
+            padding: 2px 4px;
+            border-radius: 2px;
+        }
+        
+        ul, ol {
+            margin-left: 25px;
+            margin-bottom: 15px;
+        }
+        
+        li {
+            margin-bottom: 8px;
+        }
+        
+        .toc {
+            background: #f0f8ff;
+            border: 1px solid #0788D9;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 30px;
+        }
+        
+        .toc h3 {
+            color: #0788D9;
+            border: none;
+            padding: 0;
+        }
+        
+        .toc ul {
+            list-style: none;
+            margin: 0;
+        }
+        
+        .toc li {
+            margin: 5px 0;
+        }
+        
+        .toc a {
+            color: #0788D9;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .toc a:hover {
+            text-decoration: underline;
+        }
+        
+        .architecture {
+            background: #f5f5f5;
+            border: 1px solid #ccc;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            overflow-x: auto;
+            margin: 20px 0;
+            page-break-inside: avoid;
+        }
+        
+        .footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .json-example {
+            background: #1a1a1a;
+            color: #fff;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            overflow-x: auto;
+            page-break-inside: avoid;
+        }
+        
+        .status-success {
+            color: #22863a;
+            background: #f6f8fa;
+        }
+        
+        .status-error {
+            color: #cb2431;
+            background: #ffeef0;
+        }
+        
+        @media print {
+            body {
+                background: white;
+            }
+            .container {
+                max-width: 100%;
+                padding: 20px;
+            }
+            h2 {
+                page-break-after: avoid;
+            }
+            h3 {
+                page-break-after: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎮 Backend Gateway</h1>
+            <p class="subtitle">Sistema de Recomendação de Games com ML Integration</p>
+            <p class="version">Versão 2.0 | Documentação Completa</p>
+        </header>
+
+        <div class="toc">
+            <h3>📑 Índice</h3>
+            <ul>
+                <li><a href="#visao-geral">Visão Geral</a></li>
+                <li><a href="#arquitetura">Arquitetura do Sistema</a></li>
+                <li><a href="#configuracao">Configuração</a></li>
+                <li><a href="#estrutura-projeto">Estrutura do Projeto</a></li>
+                <li><a href="#endpoints-api">Endpoints da API</a></li>
+                <li><a href="#controllers">Controllers</a></li>
+                <li><a href="#models">Models</a></li>
+                <li><a href="#middleware">Middleware</a></li>
+                <li><a href="#exemplos">Exemplos de Uso</a></li>
+                <li><a href="#troubleshooting">Troubleshooting</a></li>
+            </ul>
+        </div>
+
+        <section id="visao-geral">
+            <h2>📋 Visão Geral</h2>
+            <p>O Backend Gateway é um servidor Express.js que atua como intermediário centralizado entre o Frontend/Mobile e o serviço de Machine Learning em Python (Flask). Ele gerencia autenticação, validação de dados, e proxying de requisições para o motor de recomendações.</p>
+            
+            <h3>Principais Características</h3>
+            <ul>
+                <li><strong>Gateway Pattern:</strong> Centraliza todas as requisições da aplicação</li>
+                <li><strong>Autenticação JWT:</strong> Sistema seguro de autenticação de usuários</li>
+                <li><strong>Validação de Dados:</strong> Validação robusta de entrada com feedback claro</li>
+                <li><strong>Proxy Flask:</strong> Integração seamless com serviço de ML</li>
+                <li><strong>Tratamento de Erros:</strong> Middleware centralizado para erros</li>
+                <li><strong>CORS Configurado:</strong> Suporta requisições do Frontend/Mobile</li>
+                <li><strong>In-Memory Storage:</strong> Armazenamento rápido de usuários (desenvolvimento)</li>
+            </ul>
+
+            <h3>Tecnologias Utilizadas</h3>
+            <table>
+                <tr>
+                    <th>Tecnologia</th>
+                    <th>Versão</th>
+                    <th>Descrição</th>
+                </tr>
+                <tr>
+                    <td><strong>Express.js</strong></td>
+                    <td>4.19.2</td>
+                    <td>Framework HTTP server</td>
+                </tr>
+                <tr>
+                    <td><strong>Axios</strong></td>
+                    <td>1.7.7</td>
+                    <td>Client HTTP para requisições</td>
+                </tr>
+                <tr>
+                    <td><strong>CORS</strong></td>
+                    <td>2.8.5</td>
+                    <td>Cross-Origin Resource Sharing</td>
+                </tr>
+                <tr>
+                    <td><strong>dotenv</strong></td>
+                    <td>16.4.7</td>
+                    <td>Variáveis de ambiente</td>
+                </tr>
+                <tr>
+                    <td><strong>JWT</strong></td>
+                    <td>8.5.1</td>
+                    <td>Tokens de autenticação</td>
+                </tr>
+                <tr>
+                    <td><strong>Nodemon</strong></td>
+                    <td>3.1.4</td>
+                    <td>Auto-reload em desenvolvimento</td>
+                </tr>
+            </table>
+        </section>
+
+        <section id="arquitetura">
+            <h2>🏗️ Arquitetura do Sistema</h2>
+            <p>O Backend implementa o padrão Gateway, funcionando como ponto único de entrada para todas as requisições:</p>
+
+            <div class="architecture">
+┌─────────────────────────────────────────────────────────────┐
+│                    FRONTEND & MOBILE                        │
+│            (Next.js Web / Expo React Native)                │
+└──────────────────────────┬──────────────────────────────────┘
+                           │ HTTP Requests
+                           ↓
+        ┌──────────────────────────────────────────┐
+        │  BACKEND GATEWAY EXPRESS (PORT 3000)    │
+        │                                          │
+        │  ✓ Autenticação (JWT)                   │
+        │  ✓ Validação de Dados                   │
+        │  ✓ Proxy para Flask                     │
+        │  ✓ Error Handling Centralizado          │
+        │  ✓ CORS Manager                         │
+        │  ✓ Rate Limiting (futuro)               │
+        └──────────────┬───────────────────────────┘
+                       │
+        ┌──────────────┴────────────────────────┐
+        ↓                                       ↓
+   ┌──────────────┐                  ┌─────────────────────┐
+   │  User Data   │                  │  Game Recommendations │
+   │  (Memory)    │                  │  (KNN Model)          │
+   └──────────────┘                  └──────────┬───────────┘
+                                                │
+                            ┌───────────────────┴────────────┐
+                            ↓                                ↓
+                  ┌─────────────────────┐      ┌──────────────────────┐
+                  │  FLASK (PORT 4000)  │      │  AZURE MYSQL         │
+                  │  • KNN Recommender  │      │  Database: PI6DSM    │
+                  │  • Game Filtering   │      │  • games (50k+)      │
+                  │  • Rankings         │      │  • categories        │
+                  └─────────────────────┘      └──────────────────────┘
+            </div>
+
+            <h3>Fluxo de Requisições</h3>
+            <ol>
+                <li><strong>Cliente envia requisição:</strong> Frontend/Mobile → Backend (http://localhost:3000)</li>
+                <li><strong>Backend processa:</strong> Validação, CORS check, autenticação</li>
+                <li><strong>Roteamento:</strong> Identifica qual controller deve processar</li>
+                <li><strong>Proxy Flask (se necessário):</strong> Backend → Flask (http://localhost:4000)</li>
+                <li><strong>Resposta:</strong> Backend retorna dados ao cliente</li>
+            </ol>
+        </section>
+
+        <section id="configuracao">
+            <h2>⚙️ Configuração</h2>
+
+            <h3>Variáveis de Ambiente (.env)</h3>
+            <p>O arquivo <code>.env</code> deve estar na raiz da pasta <code>back/</code>:</p>
+
+            <pre><code>NODE_ENV=development
+PORT=3000
+JWT_SECRET=seu_secret_jwt_com_min_32_caracteres
+
+# Frontend URLs
+FRONTEND_URL=http://localhost:3001
+
+# Flask Service
+FLASK_HOST=localhost
+FLASK_PORT=4000
+
+# Azure MySQL
+AZURE_MYSQL_HOST=13.68.75.61
+AZURE_MYSQL_DATABASE=PI6DSM
+AZURE_MYSQL_USER=claudio
+AZURE_MYSQL_PASSWORD=FatecFranca123#
+AZURE_MYSQL_PORT=3306
+
+# URLs
+MOBILE_URL=exp://localhost:8081</code></pre>
+
+            <h3>Instalação de Dependências</h3>
+            <pre><code>cd back
+npm install</code></pre>
+
+            <h3>Executar em Desenvolvimento</h3>
+            <pre><code>npm run dev
+# Ou com Flask integrado:
+npm run server</code></pre>
+
+            <h3>Executar em Produção</h3>
+            <pre><code>npm start</code></pre>
+        </section>
+
+        <section id="estrutura-projeto">
+            <h2>📁 Estrutura do Projeto</h2>
+
+            <pre><code>back/
+├── src/
+│   ├── index.js                    # Entry point principal
+│   ├── controllers/
+│   │   ├── userController.js       # Autenticação e usuários
+│   │   ├── gameController.js       # Gerenciamento de jogos
+│   │   └── recommendationController.js  # Recomendações
+│   ├── models/
+│   │   ├── userModel.js            # Modelo de usuário
+│   │   └── entryModel.js           # Modelo de entrada (não usado)
+│   ├── routes/
+│   │   ├── userRoutes.js           # Rotas de usuários
+│   │   ├── gameRoutes.js           # Rotas de jogos
+│   │   └── recommendationRoutes.js # Rotas de recomendações
+│   └── middleware/
+│       ├── errorHandler.js         # Tratamento centralizado de erros
+│       └── flaskProxy.js           # Cliente HTTP para Flask
+├── .env                            # Variáveis de ambiente
+├── package.json                    # Dependências do projeto
+└── README.md                       # Documentação básica</code></pre>
+
+            <h3>Descrição dos Arquivos Principais</h3>
+
+            <h4>index.js</h4>
+            <p>Arquivo principal que inicializa o servidor Express. Configura middleware global, CORS, rotas e trata erros globais.</p>
+
+            <h4>controllers/*.js</h4>
+            <p>Controladores contêm a lógica de negócio de cada funcionalidade. Recebem requisições e retornam respostas.</p>
+
+            <h4>models/*.js</h4>
+            <p>Models definem estruturas de dados e operações em memória. Atualmente usam armazenamento em memória.</p>
+
+            <h4>routes/*.js</h4>
+            <p>Rotas definem os endpoints HTTP e mapeiam para controladores apropriados.</p>
+
+            <h4>middleware/*.js</h4>
+            <p>Middleware processam requisições antes de chegarem aos controladores (validação, erro, proxy).</p>
+        </section>
+
+        <section id="endpoints-api">
+            <h2>🔌 Endpoints da API</h2>
+
+            <h3>👤 Autenticação e Usuários (/api/users)</h3>
+
+            <div class="endpoint">
+                <span class="method get">GET</span>
+                <span class="path">/api/users</span>
+                <p><strong>Descrição:</strong> Lista todos os usuários cadastrados</p>
+                <p><strong>Parâmetros:</strong> Nenhum</p>
+                <p><strong>Resposta:</strong></p>
+                <div class="json-example">{
+  "dados": [
+    {
+      "id": 1,
+      "nome": "João Silva",
+      "email": "joao@example.com",
+      "categorias": ["Action", "Adventure"],
+      "criadoEm": "2025-11-14T..."
+    }
+  ]
+}</div>
+            </div>
+
+            <div class="endpoint">
+                <span class="method get">GET</span>
+                <span class="path">/api/users/categories</span>
+                <p><strong>Descrição:</strong> Lista todas as categorias válidas de jogos</p>
+                <p><strong>Parâmetros:</strong> Nenhum</p>
+                <p><strong>Resposta:</strong></p>
+                <div class="json-example">{
+  "categorias": [
+    "Action",
+    "Adventure",
+    "Indie",
+    "RPG",
+    ...
+  ]
+}</div>
+            </div>
+
+            <div class="endpoint">
+                <span class="method post">POST</span>
+                <span class="path">/api/users</span>
+                <p><strong>Descrição:</strong> Cadastra novo usuário</p>
+                <p><strong>Body:</strong></p>
+                <div class="json-example">{
+  "nome": "João Silva",
+  "email": "joao@example.com",
+  "senha": "senha123",
+  "confirmarSenha": "senha123",
+  "categorias": ["Action", "Adventure", "Indie"]
+}</div>
+                <p><strong>Resposta (201):</strong></p>
+                <div class="json-example">{
+  "mensagem": "Usuário criado com sucesso.",
+  "dados": {
+    "id": 1,
+    "nome": "João Silva",
+    "email": "joao@example.com",
+    "categorias": ["Action", "Adventure", "Indie"],
+    "criadoEm": "2025-11-14T..."
+  }
+}</div>
+            </div>
+
+            <div class="endpoint">
+                <span class="method post">POST</span>
+                <span class="path">/api/users/login</span>
+                <p><strong>Descrição:</strong> Autentica usuário</p>
+                <p><strong>Body:</strong></p>
+                <div class="json-example">{
+  "email": "joao@example.com",
+  "senha": "senha123"
+}</div>
+                <p><strong>Resposta (200):</strong></p>
+                <div class="json-example">{
+  "mensagem": "Login realizado com sucesso.",
+  "dados": {
+    "id": 1,
+    "nome": "João Silva",
+    "email": "joao@example.com",
+    "categorias": ["Action", "Adventure"],
+    "criadoEm": "2025-11-14T..."
+  }
+}</div>
+            </div>
+
+            <h3>🎮 Jogos (/api/games)</h3>
+
+            <div class="endpoint">
+                <span class="method get">GET</span>
+                <span class="path">/api/games</span>
+                <p><strong>Descrição:</strong> Lista jogos com paginação</p>
+                <p><strong>Parâmetros Query:</strong></p>
+                <ul>
+                    <li><code>page</code> (int): Página (padrão: 1)</li>
+                    <li><code>limit</code> (int): Itens por página (padrão: 50)</li>
+                </ul>
+                <p><strong>Exemplo:</strong> <code>GET /api/games?page=1&limit=10</code></p>
+            </div>
+
+            <div class="endpoint">
+                <span class="method get">GET</span>
+                <span class="path">/api/games/:id</span>
+                <p><strong>Descrição:</strong> Busca jogo por ID</p>
+                <p><strong>Parâmetros:</strong> <code>id</code> (int)</p>
+                <p><strong>Exemplo:</strong> <code>GET /api/games/42</code></p>
+            </div>
+
+            <div class="endpoint">
+                <span class="method get">GET</span>
+                <span class="path">/api/games/search</span>
+                <p><strong>Descrição:</strong> Busca jogo por nome</p>
+                <p><strong>Parâmetros Query:</strong></p>
+                <ul>
+                    <li><code>q</code> (string): Termo de busca (obrigatório)</li>
+                </ul>
+                <p><strong>Exemplo:</strong> <code>GET /api/games/search?q=minecraft</code></p>
+            </div>
+
+            <div class="endpoint">
+                <span class="method get">GET</span>
+                <span class="path">/api/games/categories</span>
+                <p><strong>Descrição:</strong> Filtra jogos por até 4 categorias</p>
+                <p><strong>Parâmetros Query:</strong></p>
+                <ul>
+                    <li><code>cat1, cat2, cat3, cat4</code> (string): Categorias</li>
+                    <li><code>limit</code> (int): Quantidade de resultados (padrão: 10)</li>
+                </ul>
+                <p><strong>Exemplo:</strong> <code>GET /api/games/categories?cat1=Action&cat2=Adventure&limit=20</code></p>
+            </div>
+
+            <div class="endpoint">
+                <span class="method get">GET</span>
+                <span class="path">/api/games/aleatorio</span>
+                <p><strong>Descrição:</strong> Retorna um jogo aleatório</p>
+                <p><strong>Parâmetros:</strong> Nenhum</p>
+            </div>
+
+            <div class="endpoint">
+                <span class="method post">POST</span>
+                <span class="path">/api/games/:id/rate</span>
+                <p><strong>Descrição:</strong> Registra avaliação de um jogo</p>
+                <p><strong>Body:</strong></p>
+                <div class="json-example">{
+  "positiva": true
+}</div>
+                <p><strong>Parâmetros:</strong> <code>id</code> (int), <code>positiva</code> (boolean)</p>
+            </div>
+
+            <h3>🤖 Recomendações (/api/recommendations)</h3>
+
+            <div class="endpoint">
+                <span class="method get">GET</span>
+                <span class="path">/api/recommendations/users/:userId</span>
+                <p><strong>Descrição:</strong> Recomendações personalizadas por categorias</p>
+                <p><strong>Parâmetros:</strong></p>
+                <ul>
+                    <li><code>userId</code> (int): ID do usuário</li>
+                    <li><code>limit</code> (int): Quantidade de recomendações (padrão: 10)</li>
+                </ul>
+            </div>
+
+            <div class="endpoint">
+                <span class="method get">GET</span>
+                <span class="path">/api/recommendations/ranking/popular</span>
+                <p><strong>Descrição:</strong> Jogos mais populares</p>
+                <p><strong>Parâmetros Query:</strong></p>
+                <ul>
+                    <li><code>limit</code> (int): Quantidade (padrão: 10)</li>
+                </ul>
+            </div>
+
+            <div class="endpoint">
+                <span class="method get">GET</span>
+                <span class="path">/api/recommendations/ranking/best</span>
+                <p><strong>Descrição:</strong> Jogos melhor avaliados</p>
+                <p><strong>Parâmetros Query:</strong></p>
+                <ul>
+                    <li><code>limit</code> (int): Quantidade (padrão: 10)</li>
+                    <li><code>minRatings</code> (int): Avaliações mínimas (padrão: 5)</li>
+                </ul>
+            </div>
+
+            <div class="endpoint">
+                <span class="method get">GET</span>
+                <span class="path">/api/recommendations/games/:id/similar</span>
+                <p><strong>Descrição:</strong> Jogos similares a um jogo específico</p>
+                <p><strong>Parâmetros:</strong></p>
+                <ul>
+                    <li><code>id</code> (int): ID do jogo</li>
+                    <li><code>limit</code> (int): Quantidade (padrão: 5)</li>
+                </ul>
+            </div>
+
+            <div class="endpoint">
+                <span class="method get">GET</span>
+                <span class="path">/api/recommendations/system/health</span>
+                <p><strong>Descrição:</strong> Status da saúde do sistema (Backend + Flask)</p>
+                <p><strong>Parâmetros:</strong> Nenhum</p>
+                <p><strong>Resposta:</strong></p>
+                <div class="json-example">{
+  "sucesso": true,
+  "backend": "online",
+  "flask": {
+    "status": "healthy",
+    "jogos_carregados": 50000,
+    "modelo_treinado": true
+  }
+}</div>
+            </div>
+        </section>
+
+        <section id="controllers">
+            <h2>🎯 Controllers</h2>
+
+            <h3>UserController</h3>
+            <p>Gerencia autenticação e dados de usuários.</p>
+
+            <h4>Métodos Principais:</h4>
+            <ul>
+                <li><strong>create(req, res):</strong> Cadastra novo usuário com validação completa</li>
+                <li><strong>login(req, res):</strong> Autentica usuário por email/senha</li>
+                <li><strong>getAll(req, res):</strong> Lista todos os usuários</li>
+                <li><strong>getCategories(req, res):</strong> Retorna categorias válidas do CSV</li>
+            </ul>
+
+            <h4>Validações:</h4>
+            <ul>
+                <li>Nome: obrigatório, string</li>
+                <li>Email: obrigatório, formato válido, único</li>
+                <li>Senha: mínimo 6 caracteres, confirmação obrigatória</li>
+                <li>Categorias: array não vazio, validação contra CSV</li>
+            </ul>
+
+            <h3>GameController</h3>
+            <p>Gerencia operações de jogos através do proxy Flask.</p>
+
+            <h4>Métodos Principais:</h4>
+            <ul>
+                <li><strong>getAll(req, res, next):</strong> Lista jogos com paginação</li>
+                <li><strong>getById(req, res, next):</strong> Busca jogo por ID</li>
+                <li><strong>search(req, res, next):</strong> Busca por nome com termo de busca</li>
+                <li><strong>getByCategories(req, res, next):</strong> Filtra até 4 categorias</li>
+                <li><strong>getRandom(req, res, next):</strong> Retorna jogo aleatório</li>
+                <li><strong>rate(req, res, next):</strong> Registra avaliação positiva/negativa</li>
+            </ul>
+
+            <h3>RecommendationController</h3>
+            <p>Gerencia recomendações e rankings.</p>
+
+            <h4>Métodos Principais:</h4>
+            <ul>
+                <li><strong>getForUser(req, res, next):</strong> Recomendações por categorias do usuário</li>
+                <li><strong>getPopular(req, res, next):</strong> Jogos mais populares</li>
+                <li><strong>getBestRated(req, res, next):</strong> Jogos melhor avaliados</li>
+                <li><strong>getSimilar(req, res, next):</strong> Jogos similares</li>
+                <li><strong>getSystemHealth(req, res, next):</strong> Status do sistema completo</li>
+            </ul>
+        </section>
+
+        <section id="models">
+            <h2>📊 Models</h2>
+
+            <h3>UserModel</h3>
+            <p>Modelo de dados para usuários com armazenamento em memória.</p>
+
+            <h4>Estrutura de Dados:</h4>
+            <pre><code>{
+  id: Number,
+  nome: String,
+  email: String,
+  categorias: Array&lt;String&gt;,
+  passwordHash: String,
+  salt: String,
+  criadoEm: DateTime
+}</code></pre>
+
+            <h4>Métodos Estáticos:</h4>
+            <ul>
+                <li><strong>findAll():</strong> Retorna todos os usuários</li>
+                <li><strong>findByEmail(email):</strong> Busca por email único</li>
+                <li><strong>findByNome(nome):</strong> Busca por nome</li>
+                <li><strong>create(dados):</strong> Cria novo usuário com ID auto-incrementado</li>
+            </ul>
+
+            <h3>Segurança de Senha</h3>
+            <p>Senhas são hasheadas com PBKDF2:</p>
+            <ul>
+                <li><strong>Algoritmo:</strong> PBKDF2 com SHA-512</li>
+                <li><strong>Iterações:</strong> 100.000</li>
+                <li><strong>Salt:</strong> 16 bytes aleatórios</li>
+            </ul>
+        </section>
+
+        <section id="middleware">
+            <h2>⚙️ Middleware</h2>
+
+            <h3>FlaskProxy Middleware</h3>
+            <p>Cliente HTTP centralizado para comunicação com Flask usando Axios.</p>
+
+            <h4>Configuração:</h4>
+            <ul>
+                <li>Base URL: <code>http://FLASK_HOST:FLASK_PORT</code></li>
+                <li>Timeout: 10 segundos</li>
+                <li>Header padrão: <code>Content-Type: application/json</code></li>
+            </ul>
+
+            <h4>Interceptores:</h4>
+            <ul>
+                <li><strong>Request:</strong> Log de requisições saindo</li>
+                <li><strong>Response:</strong> Log de respostas recebidas</li>
+                <li><strong>Error:</strong> Log de erros de conexão</li>
+            </ul>
+
+            <h3>Error Handler Middleware</h3>
+            <p>Padroniza tratamento de erros em toda aplicação.</p>
+
+            <h4>Tipos de Erro Tratados:</h4>
+            <ul>
+                <li>Erros do Flask (ECONNREFUSED)</li>
+                <li>Erros HTTP com status code</li>
+                <li>Erros genéricos de servidor</li>
+            </ul>
+
+            <h4>Resposta Padronizada:</h4>
+            <pre><code>{
+  "erro": "Descrição do erro",
+  "detalhes": { ... }
+}</code></pre>
+        </section>
+
+        <section id="exemplos">
+            <h2>📚 Exemplos de Uso</h2>
+
+            <h3>1. Criar Usuário</h3>
+            <pre><code>curl -X POST http://localhost:3000/api/users \
+  -H "Content-Type: application/json" \
+  -d '{
+    "nome": "João Silva",
+    "email": "joao@example.com",
+    "senha": "senha123",
+    "confirmarSenha": "senha123",
+    "categorias": ["Action", "Adventure", "Indie"]
+  }'</code></pre>
+
+            <h3>2. Login</h3>
+            <pre><code>curl -X POST http://localhost:3000/api/users/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "joao@example.com",
+    "senha": "senha123"
+  }'</code></pre>
+
+            <h3>3. Listar Categorias</h3>
+            <pre><code>curl http://localhost:3000/api/users/categories</code></pre>
+
+            <h3>4. Listar Jogos</h3>
+            <pre><code>curl "http://localhost:3000/api/games?page=1&limit=10"</code></pre>
+
+            <h3>5. Buscar Jogo por Nome</h3>
+            <pre><code>curl "http://localhost:3000/api/games/search?q=minecraft"</code></pre>
+
+            <h3>6. Filtrar por Categorias</h3>
+            <pre><code>curl "http://localhost:3000/api/games/categories?cat1=Action&cat2=Adventure&limit=10"</code></pre>
+
+            <h3>7. Avaliar Jogo</h3>
+            <pre><code>curl -X POST http://localhost:3000/api/games/42/rate \
+  -H "Content-Type: application/json" \
+  -d '{"positiva": true}'</code></pre>
+
+            <h3>8. Obter Recomendações Personalizadas</h3>
+            <pre><code>curl "http://localhost:3000/api/recommendations/users/1?limit=10"</code></pre>
+
+            <h3>9. Jogos Mais Populares</h3>
+            <pre><code>curl "http://localhost:3000/api/recommendations/ranking/popular?limit=10"</code></pre>
+
+            <h3>10. Verificar Saúde do Sistema</h3>
+            <pre><code>curl http://localhost:3000/api/recommendations/system/health</code></pre>
+        </section>
+
+        <section id="troubleshooting">
+            <h2>🔧 Troubleshooting</h2>
+
+            <h3>Erro: ECONNREFUSED 127.0.0.1:4000</h3>
+            <p><strong>Problema:</strong> Backend não consegue conectar ao Flask</p>
+            <p><strong>Solução:</strong></p>
+            <ul>
+                <li>Verificar se Flask está rodando em http://localhost:4000</li>
+                <li>Aguardar 10-15 segundos para modelo de ML treinar</li>
+                <li>Confirmar FLASK_HOST e FLASK_PORT em .env</li>
+                <li>Verificar se porta 4000 não está bloqueada por firewall</li>
+            </ul>
+
+            <h3>Erro: EADDRINUSE :::3000</h3>
+            <p><strong>Problema:</strong> Porta 3000 já está em uso</p>
+            <p><strong>Solução (Windows):</strong></p>
+            <pre><code>netstat -ano | findstr :3000
+taskkill /PID &lt;PID&gt; /F</code></pre>
+
+            <h3>Erro: 404 em requisições da API</h3>
+            <p><strong>Problema:</strong> Endpoints não encontrados</p>
+            <p><strong>Solução:</strong></p>
+            <ul>
+                <li>Verificar URL exata do endpoint</li>
+                <li>Confirmar método HTTP (GET/POST)</li>
+                <li>Validar parâmetros e query strings</li>
+                <li>Consultar lista completa em "Endpoints da API"</li>
+            </ul>
+
+            <h3>Erro: 400 "Corpo da requisição inválido"</h3>
+            <p><strong>Problema:</strong> Dados enviados não passaram na validação</p>
+            <p><strong>Solução:</strong></p>
+            <ul>
+                <li>Verificar se Content-Type é application/json</li>
+                <li>Validar formato JSON do body</li>
+                <li>Conferir campos obrigatórios</li>
+                <li>Ler mensagem de erro específica</li>
+            </ul>
+
+            <h3>Erro: CORS blocked</h3>
+            <p><strong>Problema:</strong> Frontend/Mobile bloqueado por CORS</p>
+            <p><strong>Solução:</strong></p>
+            <ul>
+                <li>Adicionar porta do cliente em CORS whitelist no index.js</li>
+                <li>Confirmar que Origin é http://localhost:XXXX</li>
+                <li>Verificar credenciais: true em CORS options</li>
+            </ul>
+
+            <h3>Erro: "Categorias inválidas"</h3>
+            <p><strong>Problema:</strong> Categoria enviada não existe no CSV</p>
+            <p><strong>Solução:</strong></p>
+            <ul>
+                <li>Chamar GET /api/users/categories para ver categorias válidas</li>
+                <li>Usar apenas categorias da lista retornada</li>
+                <li>Verificar case-sensitive (Action ≠ action)</li>
+            </ul>
+        </section>
+
+        <div class="footer">
+            <p>📚 Documentação Completa - Backend Gateway v2.0</p>
+            <p>Sistema de Recomendação de Games com Machine Learning</p>
+            <p>Última atualização: 14 de Novembro de 2025</p>
+            <p>© 2025 DSM-P6-G05 - Todos os direitos reservados</p>
+        </div>
+    </div>
+</body>
+</html>

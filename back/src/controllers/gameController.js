@@ -5,6 +5,7 @@
  */
 
 const { flaskAPI } = require('../middleware/flaskProxy');
+const { enrichGameImages } = require('../middleware/imageEnricher');
 
 const gameController = {
   /**
@@ -21,9 +22,15 @@ const gameController = {
         },
       });
 
+      // Enriquecer com imagens
+      let dados = response.data;
+      if (dados.jogos) {
+        dados.jogos = enrichGameImages(dados.jogos);
+      }
+
       return res.json({
         sucesso: true,
-        dados: response.data,
+        dados,
       });
     } catch (error) {
       next(error);
@@ -39,9 +46,12 @@ const gameController = {
 
       const response = await flaskAPI.get(`/jogos/${id}`);
 
+      // Enriquecer com imagens
+      const dados = enrichGameImages(response.data);
+
       return res.json({
         sucesso: true,
-        dados: response.data,
+        dados,
       });
     } catch (error) {
       next(error);
@@ -63,9 +73,15 @@ const gameController = {
 
       const response = await flaskAPI.get(`/jogos/busca/${encodeURIComponent(q)}`);
 
+      // Enriquecer com imagens
+      let dados = response.data;
+      if (dados.resultados) {
+        dados.resultados = enrichGameImages(dados.resultados);
+      }
+
       return res.json({
         sucesso: true,
-        dados: response.data,
+        dados,
       });
     } catch (error) {
       next(error);
@@ -89,9 +105,17 @@ const gameController = {
         },
       });
 
+      // Enriquecer com imagens
+      let dados = response.data;
+      if (dados.jogos) {
+        dados.jogos = enrichGameImages(dados.jogos);
+      } else if (Array.isArray(dados)) {
+        dados = enrichGameImages(dados);
+      }
+
       return res.json({
         sucesso: true,
-        dados: response.data,
+        dados,
       });
     } catch (error) {
       next(error);
@@ -105,9 +129,12 @@ const gameController = {
     try {
       const response = await flaskAPI.get('/jogos/aleatorio');
 
+      // Enriquecer com imagens
+      const dados = enrichGameImages(response.data);
+
       return res.json({
         sucesso: true,
-        dados: response.data,
+        dados,
       });
     } catch (error) {
       next(error);

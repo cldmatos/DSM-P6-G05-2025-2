@@ -4,6 +4,7 @@
  */
 
 const { flaskAPI } = require('../middleware/flaskProxy');
+const { enrichGameImages } = require('../middleware/imageEnricher');
 const UserModel = require('../models/userModel');
 
 const recommendationController = {
@@ -45,11 +46,19 @@ const recommendationController = {
         },
       });
 
+      // Enriquecer com imagens
+      let dados = response.data;
+      if (dados.jogos) {
+        dados.jogos = enrichGameImages(dados.jogos);
+      } else if (Array.isArray(dados)) {
+        dados = enrichGameImages(dados);
+      }
+
       return res.json({
         sucesso: true,
         usuarioId: userId,
         categoriasUsadas: categorias,
-        dados: response.data,
+        dados,
       });
     } catch (error) {
       next(error);
@@ -67,9 +76,17 @@ const recommendationController = {
         params: { limite: limit },
       });
 
+      // Enriquecer com imagens
+      let dados = response.data;
+      if (dados.jogos) {
+        dados.jogos = enrichGameImages(dados.jogos);
+      } else if (Array.isArray(dados)) {
+        dados = enrichGameImages(dados);
+      }
+
       return res.json({
         sucesso: true,
-        dados: response.data,
+        dados,
       });
     } catch (error) {
       next(error);
@@ -90,9 +107,17 @@ const recommendationController = {
         },
       });
 
+      // Enriquecer com imagens
+      let dados = response.data;
+      if (dados.jogos) {
+        dados.jogos = enrichGameImages(dados.jogos);
+      } else if (Array.isArray(dados)) {
+        dados = enrichGameImages(dados);
+      }
+
       return res.json({
         sucesso: true,
-        dados: response.data,
+        dados,
       });
     } catch (error) {
       next(error);
@@ -111,10 +136,18 @@ const recommendationController = {
         params: { limite: limit },
       });
 
+      // Enriquecer com imagens
+      let dados = response.data;
+      if (dados.jogos) {
+        dados.jogos = enrichGameImages(dados.jogos);
+      } else if (Array.isArray(dados)) {
+        dados = enrichGameImages(dados);
+      }
+
       return res.json({
         sucesso: true,
         jogoBaseId: id,
-        dados: response.data,
+        dados,
       });
     } catch (error) {
       next(error);

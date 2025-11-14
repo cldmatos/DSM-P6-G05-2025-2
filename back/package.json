@@ -11,7 +11,13 @@
     "server": "concurrently \"npm run dev\" \"npm run flask\"",
     "flask": "cd ../machine && python api_game.py"
   },
-  "keywords": ["games", "recommendation", "ml", "flask", "express"],
+  "keywords": [
+    "games",
+    "recommendation",
+    "ml",
+    "flask",
+    "express"
+  ],
   "author": "",
   "license": "MIT",
   "dependencies": {
@@ -24,6 +30,7 @@
   },
   "devDependencies": {
     "concurrently": "^8.2.2",
-    "nodemon": "^3.1.4"
+    "nodemon": "^3.1.4",
+    "puppeteer": "^24.30.0"
   }
 }
