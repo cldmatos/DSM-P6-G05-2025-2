@@ -6,12 +6,13 @@ Integrado com MySQL Azure e atualizações dinâmicas
 
 import pandas as pd
 import numpy as np
-from surprise import Dataset, Reader, KNNBasic
 import mysql.connector
 from mysql.connector import Error
 import os
 from typing import List, Dict, Any, Optional
 import logging
+from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.feature_extraction.text import TfidfVectorizer
 
 # Configurar logging
 logging.basicConfig(level=logging.INFO)
@@ -24,7 +25,7 @@ class SistemaRecomendacaoGames:
         """
         self.games_df = None
         self.model = None
-        self.trainset = None
+        self.similarity_matrix = None
         
         # Configurações do MySQL Azure
         self.db_config = {
@@ -39,21 +40,26 @@ class SistemaRecomendacaoGames:
         self._preparar_modelo()
     
     def _conectar_mysql(self):
-        """Conecta ao MySQL Azure"""
+        """Conecta ao MySQL Azure com timeout curto"""
         try:
-            connection = mysql.connector.connect(**self.db_config)
+            connection = mysql.connector.connect(
+                **self.db_config,
+                connection_timeout=3  # Timeout de 3 segundos
+            )
             return connection
         except Error as e:
             logger.error(f"❌ Erro ao conectar ao MySQL: {e}")
             return None
     
     def _carregar_dados_mysql(self):
-        """Carrega os dados dos games do MySQL"""
+        """Carrega os dados dos games do MySQL ou usa dados simulados"""
         logger.info("📁 Carregando base de dados do MySQL...")
         
         connection = self._conectar_mysql()
         if not connection:
-            raise Exception("Não foi possível conectar ao MySQL")
+            logger.warning("⚠️ MySQL não disponível, usando dados simulados")
+            self._carregar_dados_simulados()
+            return
         
         try:
             query = """
@@ -68,10 +74,77 @@ class SistemaRecomendacaoGames:
             
         except Error as e:
             logger.error(f"❌ Erro ao carregar dados: {e}")
-            raise
+            logger.warning("⚠️ Usando dados simulados")
+            self._carregar_dados_simulados()
         finally:
             if connection.is_connected():
                 connection.close()
+    
+    def _carregar_dados_simulados(self):
+        """Carrega dados simulados para testes"""
+        logger.info("📋 Carregando dados simulados de teste...")
+        
+        dados_simulados = {
+            'id': range(1, 11),
+            'name': [
+                'The Witcher 3',
+                'Elden Ring',
+                'Cyberpunk 2077',
+                'Baldur\'s Gate 3',
+                'Starfield',
+                'Minecraft',
+                'Dark Souls III',
+                'Horizon Zero Dawn',
+                'Ghost of Tsushima',
+                'Hades'
+            ],
+            'release_date': ['2015-05-19'] * 10,
+            'required_age': [18, 16, 18, 12, 10, 3, 16, 13, 18, 12],
+            'price': [39.99, 59.99, 59.99, 59.99, 69.99, 26.95, 39.99, 69.99, 59.99, 24.99],
+            'header_image': [''] * 10,
+            'positive': [100000, 95000, 80000, 92000, 88000, 500000, 75000, 120000, 110000, 98000],
+            'negative': [5000, 4000, 15000, 3000, 7000, 2000, 3000, 8000, 5000, 2000],
+            'recommendations': [500000] * 10,
+            'genres': [
+                'Action,RPG,Adventure',
+                'Action,RPG,Adventure',
+                'Action,RPG,Adventure',
+                'RPG,Adventure',
+                'RPG,Adventure',
+                'Adventure,Indie,Simulation',
+                'Action,RPG,Adventure',
+                'Action,Adventure',
+                'Action,Adventure',
+                'Action,Indie,Adventure'
+            ],
+            'categories': [
+                'Action,Adventure,Singleplayer',
+                'Action,Adventure,Singleplayer',
+                'Action,Adventure,Singleplayer',
+                'Singleplayer,Multiplayer,Adventure',
+                'Action,Adventure,Singleplayer',
+                'Singleplayer,Multiplayer,Indie',
+                'Action,Adventure,Singleplayer',
+                'Action,Adventure,Singleplayer',
+                'Action,Adventure,Singleplayer',
+                'Action,Adventure,Indie'
+            ],
+            'description': [
+                'RPG épico com personagens memoráveis',
+                'Challenging action RPG',
+                'Cyberpunk futurista',
+                'Épico RPG em mundo mágico',
+                'Exploração espacial',
+                'Sandbox criativo',
+                'Challenging dark fantasy',
+                'Adventure em mundo pós-apocalíptico',
+                'Samurai action',
+                'Roguelike action'
+            ]
+        }
+        
+        self.games_df = pd.DataFrame(dados_simulados)
+        logger.info(f"✅ Dados simulados carregados: {len(self.games_df)} jogos")
     
     def _converter_para_int(self, valor):
         """Converte valor para int de forma segura"""
@@ -96,52 +169,25 @@ class SistemaRecomendacaoGames:
         nota = 1 + (percentual_positivo * 4)
         return round(nota, 2)
     
-    def _criar_ratings_baseados_avaliacoes(self) -> pd.DataFrame:
+    def _calcular_similaridade_conteudo(self):
         """
-        Cria ratings para treinamento baseado nas colunas positive/negative
-        Gera ratings simulados de usuários baseados nas avaliações reais
+        Calcula matriz de similaridade entre jogos baseado em categorias e gêneros
+        Usa TF-IDF para comparar conteúdo
         """
-        ratings_data = []
+        # Combinar categorias e gêneros
+        conteudo = self.games_df['categories'].fillna('') + ' ' + self.games_df['genres'].fillna('')
         
-        # Para cada jogo, criar ratings baseados nas avaliações
-        for _, jogo in self.games_df.iterrows():
-            # Converter para int de forma segura
-            positive = self._converter_para_int(jogo['positive'])
-            negative = self._converter_para_int(jogo['negative'])
-            total_avaliacoes = positive + negative
-            
-            if total_avaliacoes > 0:
-                # Calcular nota base
-                nota_base = self._calcular_nota_media(positive, negative)
-                
-                # Criar múltiplos ratings simulados baseados no volume de avaliações
-                num_ratings_simulados = min(total_avaliacoes, 50)  # Máximo 50 ratings por jogo
-                
-                for i in range(num_ratings_simulados):
-                    # Adicionar pequena variação aleatória
-                    rating_variado = max(1, min(5, round(nota_base + np.random.normal(0, 0.3), 1)))
-                    ratings_data.append({
-                        'user_id': f"simulated_user_{i}",
-                        'item_id': jogo['name'],
-                        'rating': rating_variado
-                    })
-            else:
-                # Se não há avaliações, criar alguns ratings neutros
-                for i in range(5):
-                    ratings_data.append({
-                        'user_id': f"simulated_user_{i}",
-                        'item_id': jogo['name'],
-                        'rating': np.random.randint(3, 4)
-                    })
+        # Calcular TF-IDF
+        vectorizer = TfidfVectorizer(analyzer='char', ngram_range=(2, 2))
+        tfidf_matrix = vectorizer.fit_transform(conteudo)
         
-        return pd.DataFrame(ratings_data)
+        # Calcular similaridade cosseno
+        self.similarity_matrix = cosine_similarity(tfidf_matrix)
+        logger.info("✅ Matriz de similaridade calculada com sucesso")
     
     def _preparar_modelo(self):
-        """Prepara e treina o modelo de recomendação com dados atualizados"""
+        """Prepara o modelo de recomendação baseado em similaridade de conteúdo"""
         logger.info("🤖 Preparando modelo de recomendação...")
-        
-        # Criar ratings baseados nas avaliações atuais
-        ratings_df = self._criar_ratings_baseados_avaliacoes()
         
         # Calcular métricas para exibição
         self.games_df['nota_media'] = self.games_df.apply(
@@ -156,20 +202,11 @@ class SistemaRecomendacaoGames:
             axis=1
         )
         
-        # Treinar modelo K-NN
-        reader = Reader(rating_scale=(1, 5))
-        data = Dataset.load_from_df(ratings_df[['user_id', 'item_id', 'rating']], reader)
-        self.trainset = data.build_full_trainset()
+        # Calcular similaridade de conteúdo
+        self._calcular_similaridade_conteudo()
         
-        sim_options = {
-            'name': 'cosine',
-            'user_based': False
-        }
-        self.model = KNNBasic(sim_options=sim_options)
-        self.model.fit(self.trainset)
-        
-        logger.info("✅ Modelo treinado com sucesso!")
-        logger.info(f"📊 Total de ratings para treinamento: {len(ratings_df)}")
+        logger.info("✅ Modelo preparado com sucesso!")
+        logger.info(f"📊 Total de jogos: {len(self.games_df)}")
     
     def _atualizar_avaliacoes_jogo(self, jogo_id: int, positiva: bool) -> bool:
         """
@@ -286,7 +323,7 @@ class SistemaRecomendacaoGames:
     
     def get_jogos_recomendados(self, jogo_id: int, limite: int = 5) -> List[Dict[str, Any]]:
         """
-        Retorna jogos recomendados baseados em similaridade
+        Retorna jogos recomendados baseados em similaridade de conteúdo
         
         Args:
             jogo_id: ID do jogo base para recomendação
@@ -295,27 +332,29 @@ class SistemaRecomendacaoGames:
         Returns:
             Lista de jogos recomendados
         """
-        jogo_base = self.games_df[self.games_df['id'] == jogo_id]
-        if jogo_base.empty:
+        # Encontrar índice do jogo
+        indice_jogo = self.games_df[self.games_df['id'] == jogo_id].index
+        
+        if len(indice_jogo) == 0:
             return []
         
-        nome_jogo = jogo_base.iloc[0]['name']
+        idx = indice_jogo[0]
         
-        try:
-            jogo_inner_id = self.trainset.to_inner_iid(nome_jogo)
-            neighbors = self.model.get_neighbors(jogo_inner_id, k=limite)
-            
-            jogos_recomendados = []
-            for inner_id in neighbors:
-                nome_recomendado = self.trainset.to_raw_iid(inner_id)
-                jogo_info = self.games_df[self.games_df['name'] == nome_recomendado]
-                if not jogo_info.empty:
-                    jogos_recomendados.append(self._formatar_jogo(jogo_info.iloc[0]))
-            
-            return jogos_recomendados
-            
-        except ValueError:
-            return []
+        # Obter scores de similaridade para este jogo
+        sim_scores = list(enumerate(self.similarity_matrix[idx]))
+        
+        # Ordenar por similaridade (descrescente) e pegar top N+1 (excluindo o próprio jogo)
+        sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)[1:limite+1]
+        
+        # Buscar índices dos jogos recomendados
+        jogos_indices = [i[0] for i in sim_scores]
+        
+        # Retornar informações dos jogos
+        jogos_recomendados = []
+        for idx in jogos_indices:
+            jogos_recomendados.append(self._formatar_jogo(self.games_df.iloc[idx]))
+        
+        return jogos_recomendados
     
     def get_jogo_aleatorio(self) -> Dict[str, Any]:
         """

@@ -21,6 +21,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors({
   origin: [
     process.env.FRONTEND_URL || 'http://localhost:3000',
+    'http://localhost:3001', // Next.js dev server
+    'http://localhost:3002', // Next.js dev server (turbopack)
     process.env.MOBILE_URL || 'exp://localhost:8081',
   ],
   credentials: true,
