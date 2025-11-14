@@ -2,10 +2,13 @@ import axios, { AxiosInstance, AxiosError } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AuthResponse, LoginCredentials, RegisterData, User, ApiError } from '../types';
 
-// TODO: Ajustar para o endereço correto da sua API
+// Configuração da API - Ajuste conforme seu ambiente
 const API_BASE_URL = __DEV__
-  ? 'http://localhost:3000/api' // Desenvolvimento
-  : 'https://exemplo.com/api'; // Produção
+  ? 'http://10.0.2.2:3000/api' // Android emulator
+  : 'https://seu-backend-prod.com/api'; // Produção
+
+// Para iOS: 'http://localhost:3000/api'
+// Para Device local: 'http://192.168.x.x:3000/api' (substitua pelo IP da sua máquina)
 
 const TOKEN_KEY = '@GameList:token';
 const USER_KEY = '@GameList:user';
@@ -22,6 +25,7 @@ class ApiService {
       },
     });
 
+    // Interceptor para adicionar token
     this.api.interceptors.request.use(
       async (config) => {
         const token = await this.getToken();
@@ -35,6 +39,7 @@ class ApiService {
       }
     );
 
+    // Interceptor para tratar erros
     this.api.interceptors.response.use(
       (response) => response,
       async (error: AxiosError) => {
@@ -65,35 +70,56 @@ class ApiService {
     };
   }
 
-  async login(credentials: LoginCredentials): Promise<AuthResponse> {
-    const response = await this.api.post<AuthResponse>('/auth/login', credentials);
-    await this.saveAuth(response.data);
+  // ========================================================================
+  // AUTENTICAÇÃO
+  // ========================================================================
+
+  async login(email: string, senha: string): Promise<any> {
+    const response = await this.api.post('/users/login', { email, senha });
+    if (response.data.dados) {
+      await this.saveAuth(response.data.dados);
+    }
     return response.data;
   }
 
-  async register(data: RegisterData): Promise<AuthResponse> {
-    const response = await this.api.post<AuthResponse>('/auth/register', data);
-    await this.saveAuth(response.data);
+  async register(data: {
+    nome: string;
+    email: string;
+    senha: string;
+    confirmarSenha: string;
+    categorias: string[];
+  }): Promise<any> {
+    const response = await this.api.post('/users', data);
+    if (response.data.dados) {
+      await this.saveAuth(response.data.dados);
+    }
     return response.data;
   }
 
   async logout(): Promise<void> {
     try {
-      await this.api.post('/auth/logout');
+      await this.api.post('/users/logout');
     } finally {
       await this.clearAuth();
     }
   }
 
   async getProfile(): Promise<User> {
-    const response = await this.api.get<User>('/auth/profile');
+    const response = await this.api.get('/users/profile');
+    return response.data.dados;
+  }
+
+  async getCategories(): Promise<any> {
+    const response = await this.api.get('/users/categories');
     return response.data;
   }
 
-  async getGames(page: number = 1, limit: number = 20) {
-    const response = await this.api.get('/games', {
-      params: { page, limit },
-    });
+  // ========================================================================
+  // JOGOS
+  // ========================================================================
+
+  async getAllGames(page = 1, limit = 50) {
+    const response = await this.api.get(`/games?page=${page}&limit=${limit}`);
     return response.data;
   }
 
@@ -103,26 +129,71 @@ class ApiService {
   }
 
   async searchGames(query: string) {
-    const response = await this.api.get('/games/search', {
-      params: { q: query },
-    });
+    const response = await this.api.get(`/games/search?q=${encodeURIComponent(query)}`);
     return response.data;
   }
 
-  async getRecommendedGames() {
-    const response = await this.api.get('/games/recommended');
+  async getGamesByCategories(cat1: string, cat2: string, cat3: string, cat4: string) {
+    const response = await this.api.get(
+      `/games/categories?cat1=${cat1}&cat2=${cat2}&cat3=${cat3}&cat4=${cat4}`
+    );
     return response.data;
   }
 
-  async getPopularGames() {
-    const response = await this.api.get('/games/popular');
+  async getRandomGame() {
+    const response = await this.api.get('/games/aleatorio');
     return response.data;
   }
 
-  private async saveAuth(data: AuthResponse): Promise<void> {
+  async rateGame(gameId: number, positiva: boolean) {
+    const response = await this.api.post(`/games/${gameId}/rate`, { positiva });
+    return response.data;
+  }
+
+  // ========================================================================
+  // RECOMENDAÇÕES
+  // ========================================================================
+
+  async getRecommendedGames(userId: number, limit = 10) {
+    const response = await this.api.get(
+      `/recommendations/users/${userId}?limit=${limit}`
+    );
+    return response.data;
+  }
+
+  async getPopularGames(limit = 10) {
+    const response = await this.api.get(
+      `/recommendations/ranking/popular?limit=${limit}`
+    );
+    return response.data;
+  }
+
+  async getBestRatedGames(limit = 10, minRatings = 5) {
+    const response = await this.api.get(
+      `/recommendations/ranking/best?limit=${limit}&minRatings=${minRatings}`
+    );
+    return response.data;
+  }
+
+  async getSimilarGames(gameId: number, limit = 5) {
+    const response = await this.api.get(
+      `/recommendations/games/${gameId}/similar?limit=${limit}`
+    );
+    return response.data;
+  }
+
+  async getSystemHealth() {
+    const response = await this.api.get('/recommendations/system/health');
+    return response.data;
+  }
+
+  // ========================================================================
+  // AUTH STORAGE
+  // ========================================================================
+
+  private async saveAuth(user: any): Promise<void> {
     await AsyncStorage.multiSet([
-      [TOKEN_KEY, data.token],
-      [USER_KEY, JSON.stringify(data.user)],
+      [USER_KEY, JSON.stringify(user)],
     ]);
   }
 
@@ -140,8 +211,8 @@ class ApiService {
   }
 
   async isAuthenticated(): Promise<boolean> {
-    const token = await this.getToken();
-    return !!token;
+    const user = await this.getStoredUser();
+    return !!user;
   }
 }
 
