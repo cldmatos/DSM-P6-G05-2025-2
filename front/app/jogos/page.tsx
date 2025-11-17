@@ -12,16 +12,16 @@ export default function GamesPage() {
   const [searchTerm, setSearchTerm] = useState("");
 
   const allGames = [
-    { id: 1, title: "The Witcher 3: Wild Hunt", image: "/games/witcher3.png", rating: 4.8 },
-    { id: 2, title: "Elden Ring", image: "/games/eldenring.png", rating: 4.7 },
-    { id: 3, title: "Red Dead Redemption 2", image: "/games/rdr2.png", rating: 4.9 },
-    { id: 4, title: "Cyberpunk 2077", image: "/games/cyberpunk.png", rating: 4.3 },
-    { id: 5, title: "Baldur's Gate 3", image: "/games/baldurs.png", rating: 4.9 },
-    { id: 6, title: "God of War Ragnarök", image: "/games/gow.png", rating: 4.8 },
-    { id: 7, title: "Hogwarts Legacy", image: "/games/hogwarts.png", rating: 4.5 },
-    { id: 8, title: "Starfield", image: "/games/starfield.png", rating: 4.2 },
-    { id: 9, title: "The Last of Us Part II", image: "/games/tlou2.png", rating: 4.6 },
-    { id: 10, title: "Spider-Man 2", image: "/games/spiderman.png", rating: 4.8 },
+    { id: 1, title: "The Witcher 3: Wild Hunt", image: "/games/witcher3.png", rating: 96 },
+    { id: 2, title: "Elden Ring", image: "/games/eldenring.png", rating: 94 },
+    { id: 3, title: "Red Dead Redemption 2", image: "/games/rdr2.png", rating: 98 },
+    { id: 4, title: "Cyberpunk 2077", image: "/games/cyberpunk.png", rating: 86 },
+    { id: 5, title: "Baldur's Gate 3", image: "/games/baldurs.png", rating: 98 },
+    { id: 6, title: "God of War Ragnarök", image: "/games/gow.png", rating: 96 },
+    { id: 7, title: "Hogwarts Legacy", image: "/games/hogwarts.png", rating: 90 },
+    { id: 8, title: "Starfield", image: "/games/starfield.png", rating: 84 },
+    { id: 9, title: "The Last of Us Part II", image: "/games/tlou2.png", rating: 92 },
+    { id: 10, title: "Spider-Man 2", image: "/games/spiderman.png", rating: 96 },
   ];
 
   const filteredGames = allGames.filter((game) =>

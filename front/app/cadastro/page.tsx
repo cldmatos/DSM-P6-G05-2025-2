@@ -27,6 +27,7 @@ export default function SignUpPage() {
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const router = useRouter();
+  const maxGenreSelections = 3;
 
   useEffect(() => {
     const controller = new AbortController();
@@ -48,7 +49,7 @@ export default function SignUpPage() {
   };
 
   const handleSelectAllGenres = () => {
-    setSelectedGenres(Array.from(new Set(availableGenres)));
+    setSelectedGenres(Array.from(new Set(availableGenres)).slice(0, maxGenreSelections));
   };
 
   const handleClearGenres = () => {
@@ -92,6 +93,11 @@ export default function SignUpPage() {
 
     if (!payload.categorias.length) {
       setFeedback({ type: "error", text: "Selecione pelo menos um gênero." });
+      return;
+    }
+
+    if (payload.categorias.length > maxGenreSelections) {
+      setFeedback({ type: "error", text: `Selecione no máximo ${maxGenreSelections} gêneros.` });
       return;
     }
 
@@ -227,6 +233,7 @@ export default function SignUpPage() {
             onClear={handleClearGenres}
             onClose={() => setIsModalOpen(false)}
             formatLabel={formatLabel}
+            maxSelections={maxGenreSelections}
           />
 
           <footer className="text-center text-sm text-[#999999]">

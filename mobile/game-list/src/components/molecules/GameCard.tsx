@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { TouchableOpacity } from 'react-native';
 import styled from '../../utils/styled';
 import { theme } from '../../../constants/theme';
 import { Ionicons } from '@expo/vector-icons';
+import Rating from './Rating';
 import { Game } from '../../types';
 
 interface GameCardProps {
@@ -25,6 +26,23 @@ const GameImage = styled.Image`
   background-color: ${theme.colors.background};
 `;
 
+const FallbackCover = styled.View`
+  width: 100%;
+  height: 200px;
+  align-items: center;
+  justify-content: center;
+  background-color: ${theme.colors.cardBackground};
+  padding: ${theme.spacing.md}px;
+`;
+
+const FallbackTitle = styled.Text`
+  color: ${theme.colors.primary};
+  font-size: ${theme.fonts.size.regular}px;
+  font-weight: 600;
+  text-align: center;
+  margin-top: ${theme.spacing.sm}px;
+`;
+
 const CardContent = styled.View`
   padding: ${theme.spacing.md}px;
 `;
@@ -36,32 +54,31 @@ const GameTitle = styled.Text`
   margin-bottom: ${theme.spacing.xs}px;
 `;
 
-const RatingContainer = styled.View`
-  flex-direction: row;
-  align-items: center;
-  gap: ${theme.spacing.xs}px;
-`;
-
-const RatingText = styled.Text`
-  color: ${theme.colors.primary};
-  font-size: ${theme.fonts.size.medium}px;
-  font-weight: 500;
-`;
-
 const GameCard: React.FC<GameCardProps> = ({ game, onPress }) => {
+  const [imageError, setImageError] = useState(false);
+
+  useEffect(() => {
+    setImageError(false);
+  }, [game.image]);
+
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.8}>
       <CardContainer>
-        <GameImage
-          source={{ uri: game.image }}
-          resizeMode="cover"
-        />
+        {!imageError ? (
+          <GameImage
+            source={{ uri: game.image }}
+            resizeMode="cover"
+            onError={() => setImageError(true)}
+          />
+        ) : (
+          <FallbackCover>
+            <Ionicons name="image-outline" size={48} color={theme.colors.primary} />
+            <FallbackTitle numberOfLines={2}>{game.title}</FallbackTitle>
+          </FallbackCover>
+        )}
         <CardContent>
           <GameTitle numberOfLines={2}>{game.title}</GameTitle>
-          <RatingContainer>
-            <Ionicons name="star" size={16} color={theme.colors.primary} />
-            <RatingText>{game.rating.toFixed(1)}</RatingText>
-          </RatingContainer>
+          <Rating rating={game.rating} size="sm" />
         </CardContent>
       </CardContainer>
     </TouchableOpacity>

@@ -15,25 +15,25 @@ export default function Home() {
       id: 1,
       title: "The Witcher 3: Wild Hunt",
       image: "/games/witcher3.png",
-      rating: 4.8,
+      rating: 96,
     },
     {
       id: 2,
       title: "Elden Ring",
-      image: "/games/eldenring.png",
-      rating: 4.7,
+      image: "/games//eldenring.png",
+      rating: 94,
     },
     {
       id: 3,
       title: "Red Dead Redemption 2",
       image: "/games/rdr2.png",
-      rating: 4.9,
+      rating: 98,
     },
     {
       id: 4,
       title: "Cyberpunk 2077",
       image: "/games/cyberpunk.png",
-      rating: 4.3,
+      rating: 86,
     },
   ];
 
@@ -42,25 +42,25 @@ export default function Home() {
       id: 5,
       title: "Baldur's Gate 3",
       image: "/games/baldurs.png",
-      rating: 4.9,
+      rating: 98,
     },
     {
       id: 6,
       title: "God of War Ragnarök",
       image: "/games/gow.png",
-      rating: 4.8,
+      rating: 96,
     },
     {
       id: 7,
       title: "Hogwarts Legacy",
       image: "/games/hogwarts.png",
-      rating: 4.5,
+      rating: 90,
     },
     {
       id: 8,
       title: "Starfield",
       image: "/games/starfield.png",
-      rating: 4.2,
+      rating: 84,
     },
   ];
 

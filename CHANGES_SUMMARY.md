@@ -5,6 +5,7 @@ Data: 14 de Novembro de 2025
 ---
 
 ## 🎯 Objetivo Alcançado
+
 Integração completa de **Backend Node.js ↔ Machine Learning Python ↔ Frontend/Mobile** com arquitetura de **Gateway Pattern**.
 
 ---
@@ -14,26 +15,31 @@ Integração completa de **Backend Node.js ↔ Machine Learning Python ↔ Front
 ### ✨ NOVO - Backend Node.js
 
 #### Middleware (2 arquivos)
+
 - `src/middleware/flaskProxy.js` - HTTP Client para comunicação com Flask
 - `src/middleware/errorHandler.js` - Padronização de respostas de erro
 
 #### Controllers (2 novos + 1 atualizado)
+
 - `src/controllers/gameController.js` - Proxy para endpoints de jogos
 - `src/controllers/recommendationController.js` - Recomendações personalizadas
 - `src/controllers/userController.js` - Sem alterações (compatível)
 
 #### Routes (2 novos + 1 atualizado)
+
 - `src/routes/gameRoutes.js` - Rotas de jogos com paginação e filtros
 - `src/routes/recommendationRoutes.js` - Recomendações e rankings
 - `src/routes/userRoutes.js` - Sem alterações (compatível)
 
 #### Configuração
+
 - `.env` - Variáveis de ambiente com credenciais
 - `.env.example` - Modelo para copiar
 - `src/index.js` - ATUALIZADO: Novo bootstrap com dotenv e rotas
 - `package.json` - ATUALIZADO: Novas dependências (axios, dotenv, jwt, bcrypt)
 
 #### Documentação
+
 - `README.md` - ATUALIZADO: Guia completo do backend
 
 ### ✨ NOVO - Frontend (Next.js)
@@ -64,11 +70,11 @@ Integração completa de **Backend Node.js ↔ Machine Learning Python ↔ Front
 
 ```json
 {
-  "axios": "^1.7.7",              // HTTP Client
-  "dotenv": "^16.4.7",            // Variáveis de ambiente
-  "bcryptjs": "^2.4.3",           // Password hashing
-  "jsonwebtoken": "^8.5.1",       // JWT (preparado)
-  "concurrently": "^8.2.2"        // Run múltiplos scripts
+  "axios": "^1.7.7", // HTTP Client
+  "dotenv": "^16.4.7", // Variáveis de ambiente
+  "bcryptjs": "^2.4.3", // Password hashing
+  "jsonwebtoken": "^8.5.1", // JWT (preparado)
+  "concurrently": "^8.2.2" // Run múltiplos scripts
 }
 ```
 
@@ -90,6 +96,7 @@ Integração completa de **Backend Node.js ↔ Machine Learning Python ↔ Front
 ## 📊 Fluxo de Dados - Antes vs Depois
 
 ### ANTES (Desintegrado)
+
 ```
 Frontend → Backend (apenas usuários)
 Mobile → Backend (apenas usuários)
@@ -97,6 +104,7 @@ Machine → Isolado (sem integração)
 ```
 
 ### DEPOIS (Integrado)
+
 ```
 Frontend ──┐
 Mobile ────┼──→ Backend Gateway (Express) ──→ Machine Learning (Flask) ──→ MySQL
@@ -112,24 +120,28 @@ Mobile ────┼──→ Backend Gateway (Express) ──→ Machine Lear
 ### Modo Desenvolvimento (3 Terminais Separados)
 
 **Terminal 1 - Backend**
+
 ```bash
 cd back && npm run dev
 # Esperado: 🚀 Backend Gateway iniciado com sucesso!
 ```
 
 **Terminal 2 - Machine Learning**
+
 ```bash
 cd machine && python api_game.py
 # Esperado: 🚀 Iniciando servidor Flask...
 ```
 
 **Terminal 3 - Frontend**
+
 ```bash
 cd front && npm run dev
 # Esperado: ▲ Next.js 15.5.4 ... Local: http://localhost:3001
 ```
 
 ### Testar Integração
+
 ```bash
 # Verificar saúde
 curl http://localhost:3000/api/recommendations/system/health
@@ -160,6 +172,7 @@ Mobile (.env.local)     ← Aponta para Backend
 ```
 
 ### Credenciais MySQL (Reutilizadas)
+
 ```
 Host: 13.68.75.61
 Database: PI6DSM
@@ -187,41 +200,47 @@ Password: FatecFranca123# (DO MACHINE)
 
 ## 📈 Melhorias Implementadas
 
-| Aspecto | Antes | Depois |
-|---------|-------|--------|
-| **Arquitetura** | Desacoplada | Gateway Pattern |
-| **API Endpoints** | 4 | 20 |
-| **Integração ML** | Manual/Isolada | Automática via proxy |
-| **Credenciais** | Espalhadas | Centralizadas |
-| **Documentação** | Nenhuma | 2 guias completos |
-| **Error Handling** | Ad-hoc | Padronizado |
-| **CORS** | Estático | Configurável |
+| Aspecto            | Antes          | Depois               |
+| ------------------ | -------------- | -------------------- |
+| **Arquitetura**    | Desacoplada    | Gateway Pattern      |
+| **API Endpoints**  | 4              | 20                   |
+| **Integração ML**  | Manual/Isolada | Automática via proxy |
+| **Credenciais**    | Espalhadas     | Centralizadas        |
+| **Documentação**   | Nenhuma        | 2 guias completos    |
+| **Error Handling** | Ad-hoc         | Padronizado          |
+| **CORS**           | Estático       | Configurável         |
 
 ---
 
 ## 🐛 Possíveis Próximos Passos
 
 1. **Autenticação JWT Completa**
+
    - Adicionar middleware de verificação de token
    - Implementar refresh tokens
 
 2. **Cache Redis**
+
    - Cachear recomendações de usuários
    - Cachear rankings
 
 3. **Rate Limiting**
+
    - Limitar requisições por IP/usuário
    - Proteger endpoints críticos
 
 4. **Logging**
+
    - Winston ou Morgan
    - Centralizar logs
 
 5. **Testes**
+
    - Jest para controllers
    - Teste de integração com Flask
 
 6. **Docker**
+
    - Dockerfile para backend
    - Docker Compose para orquestração
 
@@ -257,6 +276,7 @@ curl http://localhost:3000/api/recommendations/system/health
 ## 📚 Documentação Criada
 
 1. **INTEGRATION_GUIDE.md** - Guia completo (17 seções)
+
    - Arquitetura
    - Pré-requisitos
    - Instalação

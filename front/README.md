@@ -1,6 +1,8 @@
-# Frontend
+# Frontend web
 
-Frontend do PI6
+Frontend web do PI6
+
+Link do figma: https://www.figma.com/design/WSYaFQDZLzn7eGapg4YAkr/Game-List?node-id=0-1&t=qrxOnPnj2qqmn7LW-1
 
 ## Como rodar
 
@@ -8,6 +10,7 @@ Frontend do PI6
 
 ```powershell
 cd front
+
 npm install
 ```
 

@@ -5,7 +5,6 @@ import styled from '../utils/styled';
 import { theme } from '../../constants/theme';
 import Button from '../components/atoms/Button';
 import Input from '../components/atoms/Input';
-import { Ionicons } from '@expo/vector-icons';
 
 const Container = styled.View`
   flex: 1;
@@ -16,16 +15,6 @@ const Header = styled.View`
   padding: ${theme.spacing.xl}px ${theme.spacing.lg}px;
   align-items: center;
   padding-top: ${theme.spacing.xxl}px;
-`;
-
-const LogoContainer = styled.View`
-  width: 80px;
-  height: 80px;
-  border-radius: 40px;
-  background-color: ${theme.colors.primary};
-  align-items: center;
-  justify-content: center;
-  margin-bottom: ${theme.spacing.lg}px;
 `;
 
 const WelcomeTitle = styled.Text`
@@ -153,11 +142,7 @@ export default function LoginScreen() {
   };
 
   const handleSignUp = () => {
-    Alert.alert(
-      'Cadastro',
-      'Funcionalidade em desenvolvimento.\nEm breve você poderá criar uma conta.',
-      [{ text: 'OK' }]
-    );
+    router.push('/cadastro');
   };
 
   return (
@@ -172,9 +157,6 @@ export default function LoginScreen() {
           showsVerticalScrollIndicator={false}
         >
           <Header>
-            <LogoContainer>
-              <Ionicons name="game-controller" size={40} color={theme.colors.background} />
-            </LogoContainer>
             <WelcomeTitle>Bem-vindo de volta</WelcomeTitle>
             <Subtitle>Entre para continuar explorando jogos incríveis</Subtitle>
           </Header>

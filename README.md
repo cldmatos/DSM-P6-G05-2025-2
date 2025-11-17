@@ -14,6 +14,8 @@ Este projeto implementa uma arquitetura **Gateway Pattern** para um sistema de r
 - **Mobile:** Expo + React Native
 - **Banco de Dados:** Azure MySQL (PI6DSM)
 
+Link do figma: https://www.figma.com/design/WSYaFQDZLzn7eGapg4YAkr/Game-List?node-id=0-1&t=qrxOnPnj2qqmn7LW-1
+
 ### 🎯 Funcionalidades Principais
 
 ✅ Recomendações personalizadas por categorias  
@@ -23,7 +25,7 @@ Este projeto implementa uma arquitetura **Gateway Pattern** para um sistema de r
 ✅ Busca por nome e ID  
 ✅ Jogos aleatórios  
 ✅ Autenticação de usuários  
-✅ 20+ endpoints REST  
+✅ 20+ endpoints REST
 
 ---
 
@@ -66,12 +68,14 @@ Este projeto implementa uma arquitetura **Gateway Pattern** para um sistema de r
 ## 📦 Pré-requisitos
 
 ### Sistema
+
 - **Node.js** 18+ ([Download](https://nodejs.org/))
 - **Python** 3.9+ ([Download](https://www.python.org/))
 - **Git** ([Download](https://git-scm.com/))
 - **Conexão com Azure MySQL** (credenciais: `machine/.env`)
 
 ### Verificar instalação
+
 ```bash
 node --version      # v18.x ou superior
 npm --version       # 9.x ou superior
@@ -84,6 +88,7 @@ git --version       # 2.x ou superior
 ## 🚀 Instalação Rápida (5 minutos)
 
 ### Passo 1: Preparar Machine Learning
+
 ```bash
 cd machine
 
@@ -95,6 +100,7 @@ cat .env
 ```
 
 **Esperado em `machine/.env`:**
+
 ```env
 AZURE_MYSQL_HOST=13.68.75.61
 AZURE_MYSQL_DATABASE=PI6DSM
@@ -103,6 +109,7 @@ AZURE_MYSQL_PASSWORD=FatecFranca123#
 ```
 
 ### Passo 2: Preparar Backend
+
 ```bash
 cd back
 
@@ -114,6 +121,7 @@ cat .env
 ```
 
 ### Passo 3: Preparar Frontend
+
 ```bash
 cd front
 
@@ -124,6 +132,7 @@ cat .env.local
 ```
 
 ### Passo 4: Preparar Mobile (Opcional)
+
 ```bash
 cd mobile/game-list
 
@@ -140,6 +149,7 @@ cat .env.local
 ### Opção A: 4 Terminais Separados (Recomendado)
 
 #### Terminal 1 - Backend Gateway (Express)
+
 ```bash
 cd back
 npm run dev
@@ -151,6 +161,7 @@ npm run dev
 ```
 
 #### Terminal 2 - Machine Learning (Flask)
+
 ```bash
 cd machine
 python api_game.py
@@ -164,6 +175,7 @@ python api_game.py
 ```
 
 #### Terminal 3 - Frontend (Next.js)
+
 ```bash
 cd front
 npm run dev
@@ -175,6 +187,7 @@ npm run dev
 ```
 
 #### Terminal 4 - Mobile (Expo) - Opcional
+
 ```bash
 cd mobile/game-list
 npm start
@@ -186,6 +199,7 @@ npm start
 ```
 
 ### Opção B: Backend + Flask Juntos
+
 ```bash
 cd back
 npm run server
@@ -200,10 +214,13 @@ npm run server
 ## 🧪 Testar a Integração
 
 ### Teste 1: Verificar Status
+
 ```bash
 curl http://localhost:3000/
 ```
+
 **Resposta:**
+
 ```json
 {
   "mensagem": "🎮 API Games Recommendation - Backend Gateway",
@@ -214,10 +231,13 @@ curl http://localhost:3000/
 ```
 
 ### Teste 2: Verificar Saúde do Sistema
+
 ```bash
 curl http://localhost:3000/api/recommendations/system/health
 ```
+
 **Resposta:**
+
 ```json
 {
   "sucesso": true,
@@ -231,6 +251,7 @@ curl http://localhost:3000/api/recommendations/system/health
 ```
 
 ### Teste 3: Criar Usuário
+
 ```bash
 curl -X POST http://localhost:3000/api/users \
   -H "Content-Type: application/json" \
@@ -244,6 +265,7 @@ curl -X POST http://localhost:3000/api/users \
 ```
 
 ### Teste 4: Fazer Login
+
 ```bash
 curl -X POST http://localhost:3000/api/users/login \
   -H "Content-Type: application/json" \
@@ -254,16 +276,19 @@ curl -X POST http://localhost:3000/api/users/login \
 ```
 
 ### Teste 5: Listar Jogos
+
 ```bash
 curl "http://localhost:3000/api/games?page=1&limit=10"
 ```
 
 ### Teste 6: Filtrar por Categorias
+
 ```bash
 curl "http://localhost:3000/api/games/categories?cat1=Action&cat2=Adventure&cat3=Indie&cat4=Sports&limit=10"
 ```
 
 ### Teste 7: Avaliar Jogo
+
 ```bash
 curl -X POST http://localhost:3000/api/games/1/rate \
   -H "Content-Type: application/json" \
@@ -271,6 +296,7 @@ curl -X POST http://localhost:3000/api/games/1/rate \
 ```
 
 ### Teste 8: Obter Recomendações
+
 ```bash
 curl "http://localhost:3000/api/recommendations/users/1?limit=10"
 ```
@@ -281,39 +307,40 @@ curl "http://localhost:3000/api/recommendations/users/1?limit=10"
 
 ### 👤 Autenticação (`/api/users`)
 
-| Método | Endpoint | Descrição |
-|--------|----------|-----------|
-| POST | `/` | Cadastrar novo usuário |
-| POST | `/login` | Fazer login |
-| GET | `/` | Listar todos os usuários |
-| GET | `/categories` | Listar categorias disponíveis |
+| Método | Endpoint      | Descrição                     |
+| ------ | ------------- | ----------------------------- |
+| POST   | `/`           | Cadastrar novo usuário        |
+| POST   | `/login`      | Fazer login                   |
+| GET    | `/`           | Listar todos os usuários      |
+| GET    | `/categories` | Listar categorias disponíveis |
 
 ### 🎮 Jogos (`/api/games`)
 
-| Método | Endpoint | Descrição |
-|--------|----------|-----------|
-| GET | `/` | Listar jogos com paginação |
-| GET | `/:id` | Buscar jogo por ID |
-| GET | `/search?q=termo` | Buscar jogo por nome |
-| GET | `/categories?cat1=...&cat2=...&cat3=...&cat4=...` | Filtrar por categorias |
-| GET | `/aleatorio` | Jogo aleatório |
-| POST | `/:id/rate` | Registrar avaliação (positiva/negativa) |
+| Método | Endpoint                                          | Descrição                               |
+| ------ | ------------------------------------------------- | --------------------------------------- |
+| GET    | `/`                                               | Listar jogos com paginação              |
+| GET    | `/:id`                                            | Buscar jogo por ID                      |
+| GET    | `/search?q=termo`                                 | Buscar jogo por nome                    |
+| GET    | `/categories?cat1=...&cat2=...&cat3=...&cat4=...` | Filtrar por categorias                  |
+| GET    | `/aleatorio`                                      | Jogo aleatório                          |
+| POST   | `/:id/rate`                                       | Registrar avaliação (positiva/negativa) |
 
 ### 🤖 Recomendações (`/api/recommendations`)
 
-| Método | Endpoint | Descrição |
-|--------|----------|-----------|
-| GET | `/users/:userId` | Recomendações personalizadas |
-| GET | `/ranking/popular?limit=10` | Jogos mais populares |
-| GET | `/ranking/best?limit=10` | Jogos melhor avaliados |
-| GET | `/games/:id/similar?limit=5` | Jogos similares |
-| GET | `/system/health` | Status do sistema |
+| Método | Endpoint                     | Descrição                    |
+| ------ | ---------------------------- | ---------------------------- |
+| GET    | `/users/:userId`             | Recomendações personalizadas |
+| GET    | `/ranking/popular?limit=10`  | Jogos mais populares         |
+| GET    | `/ranking/best?limit=10`     | Jogos melhor avaliados       |
+| GET    | `/games/:id/similar?limit=5` | Jogos similares              |
+| GET    | `/system/health`             | Status do sistema            |
 
 ---
 
 ## 🔑 Configuração de Variáveis de Ambiente
 
 ### Backend (`back/.env`)
+
 ```env
 NODE_ENV=development
 PORT=3000
@@ -336,12 +363,14 @@ MOBILE_URL=exp://localhost:8081
 ```
 
 ### Frontend (`front/.env.local`)
+
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:3000/api
 NEXT_PUBLIC_FLASK_URL=http://localhost:4000
 ```
 
 ### Mobile (`mobile/game-list/.env.local`)
+
 ```env
 # Android Emulator
 EXPO_PUBLIC_API_URL=http://10.0.2.2:3000/api
@@ -351,6 +380,7 @@ EXPO_PUBLIC_API_URL=http://10.0.2.2:3000/api
 ```
 
 ### Machine (`machine/.env`) - JÁ CONFIGURADO
+
 ```env
 FLASK_HOST=0.0.0.0
 FLASK_PORT=4000
@@ -441,6 +471,7 @@ DSM-P6-G05-2025-2/
 ## 🔄 Fluxo de Dados
 
 ### 1️⃣ Cadastro e Login
+
 ```
 Mobile/Web → POST /api/users
              ↓
@@ -452,6 +483,7 @@ Mobile/Web → POST /api/users
 ```
 
 ### 2️⃣ Descoberta de Jogos
+
 ```
 Mobile/Web → GET /api/games
              ↓
@@ -463,6 +495,7 @@ Mobile/Web → GET /api/games
 ```
 
 ### 3️⃣ Filtro por Categorias
+
 ```
 Mobile/Web → GET /api/games/categories?cat1=...
              ↓
@@ -474,6 +507,7 @@ Mobile/Web → GET /api/games/categories?cat1=...
 ```
 
 ### 4️⃣ Avaliações (Feedback)
+
 ```
 Mobile/Web → POST /api/games/:id/rate
              ↓
@@ -487,6 +521,7 @@ Mobile/Web → POST /api/games/:id/rate
 ```
 
 ### 5️⃣ Recomendações Personalizadas
+
 ```
 Mobile/Web → GET /api/recommendations/users/:id
              ↓
@@ -504,7 +539,9 @@ Mobile/Web → GET /api/recommendations/users/:id
 ## ⚠️ Troubleshooting
 
 ### ❌ Erro: `ECONNREFUSED 127.0.0.1:4000`
+
 **Causa:** Backend não consegue conectar ao Flask
+
 ```bash
 ✅ Solução:
 1. Verificar se Terminal 2 (Flask) está rodando
@@ -514,7 +551,9 @@ Mobile/Web → GET /api/recommendations/users/:id
 ```
 
 ### ❌ Erro: `MySQL Error: connect ECONNREFUSED`
+
 **Causa:** Flask não consegue conectar ao MySQL
+
 ```bash
 ✅ Solução:
 1. Verificar credenciais em machine/.env
@@ -524,7 +563,9 @@ Mobile/Web → GET /api/recommendations/users/:id
 ```
 
 ### ❌ Erro: `EADDRINUSE :::3000`
+
 **Causa:** Porta 3000 já está em uso
+
 ```bash
 # Windows
 netstat -ano | findstr :3000
@@ -535,14 +576,18 @@ lsof -i :3000 | kill -9 <PID>
 ```
 
 ### ❌ Erro: `ModuleNotFoundError: No module named 'flask'`
+
 **Causa:** Python packages não instalados
+
 ```bash
 cd machine
 pip install -r requirements.txt
 ```
 
 ### ❌ Erro: `npm ERR! node_modules/.bin/nodemon: not found`
+
 **Causa:** node_modules não instalados
+
 ```bash
 cd back
 rm -rf node_modules package-lock.json
@@ -553,18 +598,19 @@ npm install
 
 ## 📚 Documentação Adicional
 
-| Documento | Descrição |
-|-----------|-----------|
-| [QUICK_START.md](./QUICK_START.md) | Guia de 5 minutos com testes rápidos |
-| [INTEGRATION_GUIDE.md](./INTEGRATION_GUIDE.md) | Guia completo com 17 seções |
-| [CHANGES_SUMMARY.md](./CHANGES_SUMMARY.md) | Resumo executivo das mudanças |
-| [back/README.md](./back/README.md) | Documentação específica do Backend |
+| Documento                                      | Descrição                            |
+| ---------------------------------------------- | ------------------------------------ |
+| [QUICK_START.md](./QUICK_START.md)             | Guia de 5 minutos com testes rápidos |
+| [INTEGRATION_GUIDE.md](./INTEGRATION_GUIDE.md) | Guia completo com 17 seções          |
+| [CHANGES_SUMMARY.md](./CHANGES_SUMMARY.md)     | Resumo executivo das mudanças        |
+| [back/README.md](./back/README.md)             | Documentação específica do Backend   |
 
 ---
 
 ## 🚢 Deploy em Produção
 
 ### Azure App Service (Backend)
+
 ```bash
 1. Criar App Service Node.js
 2. Configurar Application Settings (variáveis .env)
@@ -573,6 +619,7 @@ npm install
 ```
 
 ### Azure Container Instances (Flask)
+
 ```bash
 1. Criar Dockerfile para Python
 2. Build e push para Azure Container Registry
@@ -581,6 +628,7 @@ npm install
 ```
 
 ### Vercel (Frontend Next.js)
+
 ```bash
 1. Conectar repositório GitHub
 2. Configurar environment variables
@@ -656,7 +704,3 @@ MIT
 ---
 
 **Status:** ✅ **PRONTO PARA PRODUÇÃO**
-
-**Última atualização:** 14 de Novembro de 2025
-
-**Repositório:** https://github.com/JoaoPedroaac/DSM-P6-G05-2025-2

@@ -73,6 +73,7 @@ npm install
 ## ▶️ EXECUTAR: 4 Terminais Simultâneos
 
 ### Terminal 1️⃣ - Backend Gateway (Express)
+
 ```bash
 cd back
 npm run dev
@@ -87,6 +88,7 @@ npm run dev
 ```
 
 ### Terminal 2️⃣ - Machine Learning (Flask)
+
 ```bash
 cd machine
 python api_game.py
@@ -100,6 +102,7 @@ python api_game.py
 ```
 
 ### Terminal 3️⃣ - Frontend Web (Next.js)
+
 ```bash
 cd front
 npm run dev
@@ -111,6 +114,7 @@ npm run dev
 ```
 
 ### Terminal 4️⃣ - Mobile (Expo)
+
 ```bash
 cd mobile/game-list
 npm start
@@ -125,11 +129,14 @@ npm start
 ## 🧪 TESTAR: Verificar que tudo funciona
 
 ### Teste 1: Backend está rodando?
+
 ```bash
 # Em outro terminal (Terminal 5):
 curl http://localhost:3000/
 ```
+
 **Esperado:**
+
 ```json
 {
   "mensagem": "🎮 API Games Recommendation - Backend Gateway",
@@ -140,10 +147,13 @@ curl http://localhost:3000/
 ```
 
 ### Teste 2: Flask está respondendo?
+
 ```bash
 curl http://localhost:3000/api/recommendations/system/health
 ```
+
 **Esperado:**
+
 ```json
 {
   "sucesso": true,
@@ -157,6 +167,7 @@ curl http://localhost:3000/api/recommendations/system/health
 ```
 
 ### Teste 3: Criar um usuário
+
 ```bash
 curl -X POST http://localhost:3000/api/users \
   -H "Content-Type: application/json" \
@@ -168,7 +179,9 @@ curl -X POST http://localhost:3000/api/users \
     "categorias": ["Action", "Adventure", "Indie", "Sports"]
   }'
 ```
+
 **Esperado:**
+
 ```json
 {
   "mensagem": "Usuário criado com sucesso.",
@@ -182,21 +195,25 @@ curl -X POST http://localhost:3000/api/users \
 ```
 
 ### Teste 4: Listar categorias
+
 ```bash
 curl http://localhost:3000/api/users/categories
 ```
 
 ### Teste 5: Buscar jogos
+
 ```bash
 curl "http://localhost:3000/api/games?page=1&limit=5"
 ```
 
 ### Teste 6: Filtrar por categorias
+
 ```bash
 curl "http://localhost:3000/api/games/categories?cat1=Action&cat2=Adventure&limit=5"
 ```
 
 ### Teste 7: Avaliar um jogo
+
 ```bash
 curl -X POST http://localhost:3000/api/games/1/rate \
   -H "Content-Type: application/json" \
@@ -204,6 +221,7 @@ curl -X POST http://localhost:3000/api/games/1/rate \
 ```
 
 ### Teste 8: Obter recomendações
+
 ```bash
 curl "http://localhost:3000/api/recommendations/users/1?limit=10"
 ```
@@ -213,6 +231,7 @@ curl "http://localhost:3000/api/recommendations/users/1?limit=10"
 ## ✅ Se Todos os Testes Passarem
 
 Você tem:
+
 - ✅ Backend Express rodando em http://localhost:3000
 - ✅ Flask ML rodando em http://localhost:4000
 - ✅ MySQL conectado e carregando dados
@@ -227,6 +246,7 @@ Você tem:
 ## ⚠️ Erros Comuns & Soluções
 
 ### Erro: `ECONNREFUSED 127.0.0.1:4000`
+
 ```
 ❌ Backend não consegue conectar ao Flask
 ✅ Solução: Verifique se Terminal 2 está rodando
@@ -234,30 +254,34 @@ Você tem:
 ```
 
 ### Erro: `Error: listen EADDRINUSE :::3000`
+
 ```
 ❌ Porta 3000 já está em uso
-✅ Solução: 
+✅ Solução:
    Windows: netstat -ano | findstr :3000
             taskkill /PID <PID> /F
    Linux/Mac: lsof -i :3000 | kill -9 <PID>
 ```
 
 ### Erro: `MySQL Error: connect ECONNREFUSED`
+
 ```
 ❌ Flask não consegue conectar ao MySQL
-✅ Solução: 
+✅ Solução:
    1. Verificar credenciais em machine/.env
    2. Testar: mysql -h 13.68.75.61 -u claudio -p
    3. Aguarde conexão (pode levar 15 seg na primeira vez)
 ```
 
 ### Erro: `ModuleNotFoundError: No module named 'flask'`
+
 ```
 ❌ Python packages não instalados
 ✅ Solução: cd machine && pip install -r requirements.txt
 ```
 
 ### Erro: `npm ERR! node_modules/.bin/nodemon: not found`
+
 ```
 ❌ node_modules não instalados
 ✅ Solução: cd back && rm -rf node_modules && npm install

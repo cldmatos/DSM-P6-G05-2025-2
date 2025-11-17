@@ -1,13 +1,10 @@
 "use client";
 
-import Button from "@/components/atoms/Button";
 import Footer from "@/components/organisms/Footer";
 import Header from "@/components/organisms/Header";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 
 export default function AboutPage() {
-  const router = useRouter();
 
   const teamMembers = [
     {
@@ -31,10 +28,6 @@ export default function AboutPage() {
       image: "/leo.jpg",
     }
   ];
-
-  const handleExploreGames = () => {
-    router.push("/jogos");
-  };
 
   return (
     <>
@@ -110,22 +103,6 @@ export default function AboutPage() {
                   </p>
                 </div>
               ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="px-4 py-16 md:py-24">
-          <div className="max-w-4xl mx-auto text-center">
-            <div className="bg-gradient-to-r from-primary/20 via-secondary/20 to-primary/20 rounded-2xl p-4 md:p-12 border border-primary/30">
-              <h2 className="text-3xl md:text-4xl font-bold mb-8">
-                Pronto para começar?
-              </h2>
-              <Button
-                onClick={handleExploreGames}
-                className="bg-gradient-to-r from-primary to-secondary text-background font-bold py-4 rounded-full text-lg hover:shadow-[0_0_30px_rgba(5,219,242,0.5)] transition-all duration-300 hover:scale-105"
-              >
-                Explorar Jogos
-              </Button>
             </div>
           </div>
         </section>

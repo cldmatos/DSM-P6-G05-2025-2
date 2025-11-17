@@ -17,14 +17,14 @@ import {
 export default function GamePage() {
   const params = useParams();
   const router = useRouter();
-  const [userRating, setUserRating] = useState(0);
+  const [userVote, setUserVote] = useState(0);
 
   const game = {
     id: params.id,
     title: "The Witcher 3: Wild Hunt",
     image: "/games/witcher3.png",
     coverImage: "/games/witcher3-cover.png",
-    rating: 4.8,
+    rating: 96,
     description:
       "The Witcher 3: Wild Hunt é um RPG de ação em mundo aberto que segue a história de Geralt de Rívia, um caçador de monstros profissional em busca de sua filha adotiva em fuga, enquanto o exército do Império Nilfgaardiano invade os Reinos do Norte. Com um vasto mundo repleto de cidades mercantes, ilhas vikings, passagens perigosas em montanhas e cavernas esquecidas para explorar, este jogo oferece uma experiência imersiva incomparável.",
     releaseDate: "19 de Maio, 2015",
@@ -33,9 +33,16 @@ export default function GamePage() {
     platforms: ["PC", "PlayStation", "Xbox", "Nintendo Switch"],
   };
 
-  const handleRating = (rating: number) => {
-    setUserRating(rating);
-    console.log("Nova avaliação:", rating);
+  const handleVote = (vote: number) => {
+    setUserVote(vote);
+    console.log(
+      "Novo voto:",
+      vote === 1
+        ? "Positivo"
+        : vote === -1
+          ? "Negativo"
+          : "Removido"
+    );
   };
 
   return (
@@ -94,18 +101,21 @@ export default function GamePage() {
                 <div className="bg-background/50 border border-primary/20 rounded-2xl p-6">
                   <h3 className="text-xl font-bold mb-4">Avaliar este Jogo</h3>
                   <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                    <Rating
-                      rating={userRating}
-                      size="lg"
-                      interactive
-                      onRate={handleRating}
-                    />
-                    {userRating > 0 && (
+                    <div className="flex items-center gap-4">
+                      <Rating
+                        rating={0}
+                        size="lg"
+                        interactive
+                        onRate={handleVote}
+                        userVote={userVote}
+                      />
+                    </div>
+                    {userVote !== 0 && (
                       <Button
-                        onClick={() => console.log("Salvando avaliação")}
+                        onClick={() => console.log("Salvando voto:", userVote)}
                         className="bg-gradient-to-r from-primary to-secondary text-background font-bold py-2 px-6 rounded-full hover:shadow-[0_0_20px_rgba(5,219,242,0.5)] transition-all duration-300"
                       >
-                        Salvar Avaliação
+                        Salvar Voto
                       </Button>
                     )}
                   </div>

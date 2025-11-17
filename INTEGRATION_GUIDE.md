@@ -40,12 +40,14 @@
 ## 🚀 Pré-requisitos
 
 ### Sistema
+
 - **Node.js 18+** - [Download](https://nodejs.org/)
 - **Python 3.9+** - [Download](https://www.python.org/)
 - **Git**
 - **Conexão com Azure MySQL** (já configurada)
 
 ### Dependências instaladas
+
 - ✅ Backend Node.js: `npm install` (já executado)
 - ⏳ Machine Learning Python: `pip install -r requirements.txt`
 
@@ -145,6 +147,7 @@ npm install  # Se não estiver instalado
 ### **Opção 1: Terminal Separado para Cada Serviço (RECOMENDADO)**
 
 #### Terminal 1 - Backend Node.js (PORT 3000)
+
 ```bash
 cd back
 npm run dev
@@ -153,6 +156,7 @@ npm run dev
 ```
 
 #### Terminal 2 - Machine Learning Python (PORT 4000)
+
 ```bash
 cd machine
 python api_game.py
@@ -163,6 +167,7 @@ python api_game.py
 ```
 
 #### Terminal 3 - Frontend Next.js (PORT 3001)
+
 ```bash
 cd front
 npm run dev
@@ -171,6 +176,7 @@ npm run dev
 ```
 
 #### Terminal 4 - Mobile Expo (PORT 8081)
+
 ```bash
 cd mobile/game-list
 npm start
@@ -203,6 +209,7 @@ curl http://localhost:3000/api/recommendations/system/health
 ```
 
 **Resposta esperada:**
+
 ```json
 {
   "sucesso": true,
@@ -267,12 +274,14 @@ curl "http://localhost:3000/api/recommendations/users/1?limit=10"
 ## 📡 Endpoints Disponíveis
 
 ### Autenticação (PREFIX: `/api/users`)
+
 - `POST /` - Cadastrar novo usuário
 - `POST /login` - Fazer login
 - `GET /` - Listar todos os usuários
 - `GET /categories` - Listar categorias válidas
 
 ### Jogos (PREFIX: `/api/games`)
+
 - `GET /` - Listar todos os jogos (com paginação)
 - `GET /:id` - Buscar jogo por ID
 - `GET /search?q=termo` - Buscar jogo por nome
@@ -281,6 +290,7 @@ curl "http://localhost:3000/api/recommendations/users/1?limit=10"
 - `POST /:id/rate` - Registrar avaliação
 
 ### Recomendações (PREFIX: `/api/recommendations`)
+
 - `GET /users/:userId` - Recomendações personalizadas
 - `GET /ranking/popular?limit=10` - Jogos populares
 - `GET /ranking/best?limit=10` - Melhores avaliados
@@ -292,6 +302,7 @@ curl "http://localhost:3000/api/recommendations/users/1?limit=10"
 ## 🔑 Variáveis de Ambiente
 
 ### Backend (back/.env)
+
 ```env
 NODE_ENV=development
 PORT=3000
@@ -314,6 +325,7 @@ MOBILE_URL=exp://localhost:8081
 ```
 
 ### Machine (machine/.env) - JÁ CONFIGURADO
+
 ```env
 FLASK_HOST=0.0.0.0
 FLASK_PORT=4000
@@ -327,12 +339,14 @@ AZURE_MYSQL_PORT=3306
 ```
 
 ### Frontend (front/.env.local)
+
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:3000/api
 NEXT_PUBLIC_FLASK_URL=http://localhost:4000
 ```
 
 ### Mobile (mobile/game-list/.env.local)
+
 ```env
 # Android Emulator
 EXPO_PUBLIC_API_URL=http://10.0.2.2:3000/api
@@ -346,15 +360,17 @@ EXPO_PUBLIC_API_URL=http://10.0.2.2:3000/api
 ## ⚠️ Troubleshooting
 
 ### Backend não conecta ao Flask
+
 ```
 Erro: ECONNREFUSED 127.0.0.1:4000
-Solução: 
+Solução:
 1. Verifique se Flask está rodando (Terminal 2)
 2. Verifique se FLASK_HOST e FLASK_PORT em .env estão corretos
 3. Reinicie ambos os serviços
 ```
 
 ### Flask não conecta ao MySQL
+
 ```
 Erro: ❌ Erro ao conectar ao MySQL
 Solução:
@@ -365,6 +381,7 @@ Solução:
 ```
 
 ### Mobile não conecta ao Backend
+
 ```
 Erro: Network request failed
 Solução:
@@ -375,6 +392,7 @@ Solução:
 ```
 
 ### Porta já em uso
+
 ```
 Erro: listen EADDRINUSE :::3000
 Solução:
@@ -392,11 +410,13 @@ kill -9 <PID>
 ## 📚 Fluxo de Uso Completo
 
 ### 1. Usuário abre o app mobile
+
 ```
 App Expo carrega → Conecta a http://localhost:3000/api
 ```
 
 ### 2. Usuário faz cadastro
+
 ```
 Mobile → POST /api/users
 Backend (Node.js) → Valida dados
@@ -404,6 +424,7 @@ Backend → Armazena em memory (UserModel)
 ```
 
 ### 3. Usuário faz login
+
 ```
 Mobile → POST /api/users/login
 Backend → Valida credenciais
@@ -411,6 +432,7 @@ Backend → Retorna dados do usuário com categorias
 ```
 
 ### 4. Usuário vê jogos personalizados
+
 ```
 Mobile → GET /api/recommendations/users/1
 Backend → Recupera categorias do usuário (1-4)
@@ -422,6 +444,7 @@ Backend → Retorna top 10 para mobile
 ```
 
 ### 5. Usuário avalia um jogo
+
 ```
 Mobile → POST /api/games/{gameId}/rate with {positiva: true}
 Backend → Proxy para Flask
@@ -432,6 +455,7 @@ Backend → Retorna para mobile
 ```
 
 ### 6. Usuário recebe novas recomendações
+
 ```
 Sistema automático:
 Sempre que há nova avaliação, o modelo é retreinado
@@ -456,6 +480,7 @@ Próximas requisições já usam modelo atualizado
 ## 📞 Suporte
 
 Se encontrar problemas:
+
 1. Verifique os logs em cada terminal
 2. Confirme que todas as credenciais em `.env` estão corretas
 3. Teste endpoints com Postman/Insomnia

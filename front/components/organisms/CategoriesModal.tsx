@@ -12,6 +12,7 @@ type CategoriesModalProps = {
   onClear: () => void;
   onClose: () => void;
   formatLabel?: (value: string) => string;
+  maxSelections?: number;
 };
 
 export default function CategoriesModal({
@@ -19,10 +20,10 @@ export default function CategoriesModal({
   categories,
   selected,
   onToggle,
-  onSelectAll,
   onClear,
   onClose,
   formatLabel,
+  maxSelections = 3,
 }: CategoriesModalProps) {
   if (!open) return null;
 
@@ -42,6 +43,8 @@ export default function CategoriesModal({
   const handleContentClick: React.MouseEventHandler<HTMLDivElement> = (event) => {
     event.stopPropagation();
   };
+
+  const isLimitReached = selected.length >= maxSelections;
 
   return (
     <div
@@ -68,14 +71,12 @@ export default function CategoriesModal({
           </button>
         </header>
 
+        <p className="mt-2 text-sm text-[#999999]">
+          Selecione até {maxSelections} categorias ({selected.length}/
+          {maxSelections} selecionadas)
+        </p>
+
         <div className="mt-4 flex flex-wrap gap-2">
-          <Button
-            type="button"
-            className="rounded-md bg-[#0788D9]/80 px-3 py-1 text-sm text-white hover:bg-[#0788D9]"
-            onClick={onSelectAll}
-          >
-            Selecionar todos
-          </Button>
           <Button
             type="button"
             className="rounded-md bg-transparent px-3 py-1 text-sm text-[#F25F4C] hover:text-[#F25F4C]/80"
@@ -86,16 +87,22 @@ export default function CategoriesModal({
         </div>
 
         <div className="mt-6 max-h-72 space-y-2 overflow-y-auto pr-1">
-          {categories.map((category) => (
-            <CheckBox
-              key={category}
-              id={`modal-category-${category}`}
-              label={resolveLabel(category)}
-              value={category}
-              checked={selected.includes(category)}
-              onChange={(checked) => onToggle(category, checked)}
-            />
-          ))}
+          {categories.map((category) => {
+            const isSelected = selected.includes(category);
+            const isDisabled = isLimitReached && !isSelected;
+
+            return (
+              <CheckBox
+                key={category}
+                id={`modal-category-${category}`}
+                label={resolveLabel(category)}
+                value={category}
+                checked={isSelected}
+                onChange={(checked) => onToggle(category, checked)}
+                disabled={isDisabled}
+              />
+            );
+          })}
           {!categories.length && (
             <p className="text-sm text-[#999999]">
               Nenhuma categoria disponível.

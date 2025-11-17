@@ -5,7 +5,7 @@ import styled from '../utils/styled';
 import { theme } from '../../constants/theme';
 import { Title, Text, Spacer } from '../components/atoms/Container';
 import Button from '../components/atoms/Button';
-import { Ionicons } from '@expo/vector-icons';
+import Rating from '../components/molecules/Rating';
 import { Game } from '../types';
 
 const { width } = Dimensions.get('window');
@@ -20,17 +20,8 @@ const Content = styled.View`
   padding: ${theme.spacing.lg}px;
 `;
 
-const RatingContainer = styled.View`
-  flex-direction: row;
-  align-items: center;
-  gap: ${theme.spacing.xs}px;
-  margin-bottom: ${theme.spacing.md}px;
-`;
-
-const RatingText = styled.Text`
-  color: ${theme.colors.primary};
-  font-size: ${theme.fonts.size.xlarge}px;
-  font-weight: bold;
+const RatingSection = styled.View`
+  margin-bottom: ${theme.spacing.lg}px;
 `;
 
 const InfoLabel = styled.Text`
@@ -60,11 +51,38 @@ const ScrollContent = styled(ScrollView)`
   flex: 1;
 `;
 
+const VoteCard = styled.View`
+  margin-top: ${theme.spacing.xl}px;
+  padding: ${theme.spacing.lg}px;
+  background-color: ${theme.colors.cardBackground};
+  border-radius: ${theme.borderRadius.lg}px;
+  border-width: 1px;
+  border-color: ${theme.colors.border};
+`;
+
+const VoteTitle = styled.Text`
+  color: ${theme.colors.foreground};
+  font-size: ${theme.fonts.size.large}px;
+  font-weight: 700;
+`;
+
+const VoteActions = styled.View`
+  margin-top: ${theme.spacing.md}px;
+  align-items: center;
+  gap: ${theme.spacing.md}px;
+`;
+
+const VoteHint = styled.Text`
+  color: ${theme.colors.muted};
+  font-size: ${theme.fonts.size.small}px;
+`;
+
 export default function GameDetailScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const [loading, setLoading] = useState(true);
   const [game, setGame] = useState<Game | null>(null);
+  const [userVote, setUserVote] = useState(0);
 
   useEffect(() => {
     loadGameDetails();
@@ -87,11 +105,27 @@ export default function GameDetailScreen() {
       };
 
       setGame(mockGame);
+      setUserVote(0);
     } catch (error) {
       console.error('Erro ao carregar detalhes:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleVote = (vote: number) => {
+    setUserVote(vote);
+  };
+
+  const handleSaveVote = () => {
+    if (!game || userVote === 0) {
+      return;
+    }
+
+    console.log('Salvando voto:', {
+      gameId: game.id,
+      vote: userVote,
+    });
   };
 
   if (loading) {
@@ -126,11 +160,9 @@ export default function GameDetailScreen() {
         <Content>
           <Title>{game.title}</Title>
 
-          <RatingContainer>
-            <Ionicons name="star" size={24} color={theme.colors.primary} />
-            <RatingText>{game.rating.toFixed(1)}</RatingText>
-            <Text style={{ color: theme.colors.muted }}>/5.0</Text>
-          </RatingContainer>
+          <RatingSection>
+            <Rating rating={game.rating} size="lg" />
+          </RatingSection>
 
           <Spacer />
 
@@ -165,11 +197,28 @@ export default function GameDetailScreen() {
             </>
           )}
 
-          <Spacer size="lg" />
+          <VoteCard>
+            <VoteTitle>Avaliar este jogo</VoteTitle>
 
-          <Button onPress={() => router.back()}>
-            Voltar
-          </Button>
+            <VoteActions>
+              <Rating
+                rating={game.rating}
+                size="lg"
+                interactive
+                userVote={userVote}
+                onRate={handleVote}
+                showLabel={false}
+              />
+
+              {userVote === 0 ? (
+                <VoteHint>Selecione uma opção para votar.</VoteHint>
+              ) : (
+                <Button onPress={handleSaveVote}>
+                  Salvar
+                </Button>
+              )}
+            </VoteActions>
+          </VoteCard>
         </Content>
       </ScrollContent>
     </SafeScreen>
