@@ -1,0 +1,16 @@
+[
+  {
+    "id": 1,
+    "nome": "Teste123",
+    "email": "jkaue986@gmail.com",
+    "categorias": [
+      "2D Platformer",
+      "2D Fighter",
+      "3D Fighter"
+    ],
+    "passwordHash": "283f1e221fd471a2fb011fa5d6ba6a721c9c2d0948b272eb0ace7189098fe18b1351dc79c84d57b42742ebefc4e016fac9fd6764a78edb56439d1ce274608099",
+    "salt": "608a2551c58236b6f40b69cc15b8c455",
+    "criadoEm": "2025-11-18T22:55:38.476Z",
+    "avaliacoes": []
+  }
+]

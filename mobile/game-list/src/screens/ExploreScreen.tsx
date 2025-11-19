@@ -1,11 +1,13 @@
-import React, { useMemo, useState } from 'react';
-import { FlatList, SafeAreaView } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, FlatList, SafeAreaView } from 'react-native';
 import { useRouter } from 'expo-router';
 import styled from '../utils/styled';
 import { theme } from '../../constants/theme';
 import { Title, Text, Spacer } from '../components/atoms/Container';
 import GameCard from '../components/molecules/GameCard';
-import { Game } from '../types';
+import ApiService from '../services/api';
+import { mapApiResponseToGames } from '../services/gameMapper';
+import { ApiError, Game } from '../types';
 
 const SafeScreen = styled(SafeAreaView)`
   flex: 1;
@@ -18,8 +20,8 @@ const Header = styled.View`
 
 const SearchInput = styled.TextInput`
   padding: ${theme.spacing.md}px;
-  border-radius: 4px;
-  background-color: '#1a1a1a';
+  border-radius: ${theme.borderRadius.md ?? 6}px;
+  background-color: ${theme.colors.cardBackground};
   color: ${theme.colors.foreground};
   border-width: 1px;
   border-color: ${theme.colors?.border ?? '#2a2a2a'};
@@ -37,66 +39,172 @@ const EmptyContainer = styled.View`
   padding: ${theme.spacing.xl}px;
 `;
 
-const mockGames: Game[] = [
-  {
-    id: 1,
-    title: 'The Witcher 3: Wild Hunt',
-    image: 'https://via.placeholder.com/400x200/0788d9/ffffff?text=Witcher+3',
-    rating: 4.8,
-    description: 'RPG de mundo aberto aclamado pela crítica',
-  },
-  {
-    id: 2,
-    title: 'Elden Ring',
-    image: 'https://via.placeholder.com/400x200/05dbf2/ffffff?text=Elden+Ring',
-    rating: 4.7,
-    description: 'Action RPG épico dos criadores de Dark Souls',
-  },
-  {
-    id: 3,
-    title: 'Red Dead Redemption 2',
-    image: 'https://via.placeholder.com/400x200/0788d9/ffffff?text=RDR2',
-    rating: 4.9,
-    description: 'Aventura de faroeste em mundo aberto',
-  },
-  {
-    id: 4,
-    title: 'Cyberpunk 2077',
-    image: 'https://via.placeholder.com/400x200/05dbf2/ffffff?text=Cyberpunk',
-    rating: 4.3,
-    description: 'RPG futurista em Night City',
-  },
-  {
-    id: 5,
-    title: 'Hades',
-    image: 'https://via.placeholder.com/400x200/0788d9/ffffff?text=Hades',
-    rating: 4.6,
-    description: 'Roguelike dinâmico nos domínios do submundo',
-  },
-  {
-    id: 6,
-    title: 'God of War Ragnarök',
-    image: 'https://via.placeholder.com/400x200/05dbf2/ffffff?text=GoW+Ragnarok',
-    rating: 4.9,
-    description: 'Continuação épica da saga nórdica de Kratos',
-  },
-];
+const LoadingContainer = styled.View`
+  flex: 1;
+  justify-content: center;
+  align-items: center;
+  padding: ${theme.spacing.xl}px;
+`;
+
+const StatusText = styled.Text`
+  color: ${theme.colors.muted};
+  margin-top: ${theme.spacing.sm}px;
+`;
+
+const ErrorMessage = styled.Text`
+  color: ${theme.colors.error};
+  margin-top: ${theme.spacing.sm}px;
+  text-align: center;
+`;
+
+type TimeoutRef = ReturnType<typeof setTimeout> | null;
 
 export default function ExploreScreen() {
   const router = useRouter();
   const [query, setQuery] = useState('');
+  const [games, setGames] = useState<Game[]>([]);
+  const [searchResults, setSearchResults] = useState<Game[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searching, setSearching] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [searchError, setSearchError] = useState<string | null>(null);
+  const searchTimeoutRef = useRef<TimeoutRef>(null);
 
-  const filteredGames = useMemo(() => {
-    const term = query.trim().toLowerCase();
-    if (!term) {
-      return mockGames;
+  const loadInitialGames = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const bestRatedResponse = await ApiService.getBestRatedGames(40, 20);
+      let fetchedGames = mapApiResponseToGames(bestRatedResponse);
+
+      if (!fetchedGames.length) {
+        const popularResponse = await ApiService.getPopularGames(40);
+        fetchedGames = mapApiResponseToGames(popularResponse);
+      }
+
+      if (!fetchedGames.length) {
+        const fallbackResponse = await ApiService.getAllGames(1, 40);
+        fetchedGames = mapApiResponseToGames(fallbackResponse);
+      }
+
+      if (!fetchedGames.length) {
+        setError('Não encontramos jogos para exibir agora.');
+      }
+
+      setGames(fetchedGames);
+    } catch (err) {
+      const message =
+        typeof (err as ApiError)?.message === 'string'
+          ? (err as ApiError).message
+          : err instanceof Error
+            ? err.message
+            : 'Não foi possível carregar os jogos.';
+
+      setError(message);
+      setGames([]);
+    } finally {
+      setLoading(false);
     }
-    return mockGames.filter((game) => game.title.toLowerCase().includes(term));
+  }, []);
+
+  useEffect(() => {
+    loadInitialGames();
+  }, [loadInitialGames]);
+
+  useEffect(() => {
+    const term = query.trim();
+
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+      searchTimeoutRef.current = null;
+    }
+
+    if (!term) {
+      setSearchResults([]);
+      setSearchError(null);
+      setSearching(false);
+      return;
+    }
+
+    setSearching(true);
+    setSearchError(null);
+
+    let cancelled = false;
+
+    const timeoutId = setTimeout(async () => {
+      try {
+        const response = await ApiService.searchGames(term);
+        if (cancelled) {
+          return;
+        }
+
+        const results = mapApiResponseToGames(response);
+        setSearchResults(results);
+        setSearchError(
+          results.length === 0 ? 'Nenhum jogo encontrado para este termo.' : null
+        );
+      } catch (err) {
+        if (cancelled) {
+          return;
+        }
+
+        const message =
+          typeof (err as ApiError)?.message === 'string'
+            ? (err as ApiError).message
+            : err instanceof Error
+              ? err.message
+              : 'Não foi possível buscar jogos.';
+        setSearchError(message);
+        setSearchResults([]);
+      } finally {
+        if (!cancelled) {
+          setSearching(false);
+        }
+        if (searchTimeoutRef.current === timeoutId) {
+          searchTimeoutRef.current = null;
+        }
+      }
+    }, 400);
+
+    searchTimeoutRef.current = timeoutId;
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timeoutId);
+      if (searchTimeoutRef.current === timeoutId) {
+        searchTimeoutRef.current = null;
+      }
+    };
   }, [query]);
 
+  const trimmedQuery = query.trim();
+
+  const displayedGames = useMemo(() => {
+    return trimmedQuery ? searchResults : games;
+  }, [trimmedQuery, searchResults, games]);
+
+  const statusLabel = useMemo(() => {
+    if (trimmedQuery) {
+      if (searching) {
+        return 'Buscando jogos...';
+      }
+      const count = displayedGames.length;
+      return `${count} ${count === 1 ? 'jogo encontrado' : 'jogos encontrados'}`;
+    }
+
+    if (error) {
+      return error;
+    }
+
+    const count = games.length;
+    return `${count} ${count === 1 ? 'jogo disponível' : 'jogos disponíveis'}`;
+  }, [trimmedQuery, searching, displayedGames.length, games.length, error]);
+
+  const currentError = trimmedQuery ? searchError : error;
+
   const handleGamePress = (gameId: number) => {
-    // @ts-ignore - rota dinâmica gerenciada pelo Expo Router
-    router.push(`/game/${gameId}`);
+    router.push({ pathname: '/game/[id]', params: { id: String(gameId) } });
   };
 
   return (
@@ -112,23 +220,42 @@ export default function ExploreScreen() {
           autoCorrect={false}
           autoCapitalize="none"
         />
+        {statusLabel && !currentError ? <StatusText>{statusLabel}</StatusText> : null}
+        {currentError ? <ErrorMessage>{currentError}</ErrorMessage> : null}
+        {trimmedQuery && searching ? (
+          <ActivityIndicator
+            size="small"
+            color={theme.colors.primary}
+            style={{ marginTop: theme.spacing.sm }}
+          />
+        ) : null}
       </Header>
-      <FlatList
-        data={filteredGames}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <ContentContainer>
-            <GameCard game={item} onPress={() => handleGamePress(item.id)} />
-          </ContentContainer>
-        )}
-        ListEmptyComponent={
-          <EmptyContainer>
-            <Text>Nenhum jogo encontrado</Text>
-          </EmptyContainer>
-        }
-        keyboardShouldPersistTaps="handled"
-        contentContainerStyle={{ paddingBottom: theme.spacing.xl }}
-      />
+      {loading ? (
+        <LoadingContainer>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+          <Spacer />
+          <Text>Carregando jogos...</Text>
+        </LoadingContainer>
+      ) : (
+        <FlatList
+          data={displayedGames}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({ item }) => (
+            <ContentContainer>
+              <GameCard game={item} onPress={() => handleGamePress(item.id)} />
+            </ContentContainer>
+          )}
+          ListEmptyComponent={
+            <EmptyContainer>
+              <Text style={{ color: currentError ? theme.colors.error : theme.colors.foreground }}>
+                {currentError ?? (trimmedQuery ? 'Nenhum jogo encontrado' : 'Nenhum jogo disponível no momento.')}
+              </Text>
+            </EmptyContainer>
+          }
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{ paddingBottom: theme.spacing.xl }}
+        />
+      )}
     </SafeScreen>
   );
 }

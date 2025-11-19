@@ -4,7 +4,7 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
 
 // Tipos de resposta
-interface ApiResponse<T> {
+export interface ApiResponse<T> {
   sucesso: boolean;
   dados?: T;
   erro?: string;
@@ -17,7 +17,7 @@ async function apiCall<T>(
   options: RequestInit = {}
 ): Promise<ApiResponse<T>> {
   const url = `${API_BASE_URL}${endpoint}`;
-  
+
   try {
     const response = await fetch(url, {
       headers: {
@@ -30,7 +30,8 @@ async function apiCall<T>(
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.erro || 'Erro na requisição');
+      const mensagemDetalhada = data.erro || data.mensagem;
+      throw new Error(mensagemDetalhada || 'Erro na requisição');
     }
 
     return data;
@@ -79,6 +80,27 @@ export async function getCategories() {
 
 export async function getAllUsers() {
   return apiCall('/users');
+}
+
+export async function getUserById(id: number) {
+  return apiCall(`/users/${id}`);
+}
+
+export async function addUserReview(
+  userId: number,
+  review: {
+    jogoId: number;
+    titulo: string;
+    imagem?: string | null;
+    nota?: number;
+    positivo?: boolean;
+    avaliadoEm?: string;
+  }
+) {
+  return apiCall(`/users/${userId}/reviews`, {
+    method: 'POST',
+    body: JSON.stringify(review),
+  });
 }
 
 // ============================================================================
@@ -146,12 +168,14 @@ export async function getSystemHealth() {
   return apiCall('/recommendations/system/health');
 }
 
-export default {
+const apiClient = {
   // Usuários
   loginUser,
   registerUser,
   getCategories,
   getAllUsers,
+  getUserById,
+  addUserReview,
   // Jogos
   getAllGames,
   getGameById,
@@ -166,3 +190,5 @@ export default {
   getSimilarGames,
   getSystemHealth,
 };
+
+export default apiClient;

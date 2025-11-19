@@ -137,17 +137,48 @@ function verifyPassword(password, salt, expectedHash) {
   return hash === expectedHash;
 }
 
+function buildUserProfile(user) {
+  return UserModel.toPublicProfile(user);
+}
+
 const userController = {
   getAll(req, res) {
-    const users = UserModel.findAll().map((u) => ({
-      id: u.id,
-      nome: u.nome,
-      idade: u.idade,
-      categorias: u.categorias,
-      criadoEm: u.criadoEm,
-    }));
+    const users = UserModel.findAll().map((u) => {
+      const profile = buildUserProfile(u);
+      return {
+        id: profile.id,
+        nome: profile.nome,
+        categorias: profile.categorias,
+        criadoEm: profile.criadoEm,
+        estatisticas: profile.estatisticas,
+      };
+    });
 
-    res.json({ dados: users });
+    res.json({ sucesso: true, dados: users });
+  },
+
+  getById(req, res) {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) {
+      return res.status(400).json({
+        sucesso: false,
+        mensagem: "Identificador de usuário inválido.",
+      });
+    }
+
+    const user = UserModel.findById(id);
+    if (!user) {
+      return res
+        .status(404)
+        .json({ sucesso: false, mensagem: "Usuário não encontrado." });
+    }
+
+    const profile = buildUserProfile(user);
+    return res.json({
+      sucesso: true,
+      mensagem: "Usuário encontrado com sucesso.",
+      dados: profile,
+    });
   },
 
   create(req, res) {
@@ -177,18 +208,13 @@ const userController = {
       salt,
     });
 
-    // Retorna sem expor passwordHash e salt
-    const response = {
-      id: created.id,
-      nome: created.nome,
-      email: created.email,
-      categorias: created.categorias,
-      criadoEm: created.criadoEm,
-    };
+    const profile = buildUserProfile(created);
 
-    return res
-      .status(201)
-      .json({ mensagem: "Usuário criado com sucesso.", dados: response });
+    return res.status(201).json({
+      sucesso: true,
+      mensagem: "Usuário criado com sucesso.",
+      dados: profile,
+    });
   },
 
   login(req, res) {
@@ -204,15 +230,12 @@ const userController = {
       return res.status(401).json({ mensagem: "Credenciais inválidas." });
     }
 
+    const profile = buildUserProfile(user);
+
     return res.json({
+      sucesso: true,
       mensagem: "Login realizado com sucesso.",
-      dados: {
-        id: user.id,
-        nome: user.nome,
-        email: user.email,
-        categorias: user.categorias,
-        criadoEm: user.criadoEm,
-      },
+      dados: profile,
     });
   },
 };
@@ -220,7 +243,87 @@ const userController = {
 // Handler para expor categorias válidas ao front
 userController.getCategories = function (req, res) {
   const list = Array.from(validCategories).sort();
-  res.json({ categorias: list });
+  res.json({ sucesso: true, categorias: list });
+};
+
+userController.addReview = function (req, res) {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id <= 0) {
+    return res
+      .status(400)
+      .json({ sucesso: false, mensagem: "Identificador de usuário inválido." });
+  }
+
+  const baseUser = UserModel.findById(id);
+  if (!baseUser) {
+    return res
+      .status(404)
+      .json({ sucesso: false, mensagem: "Usuário não encontrado." });
+  }
+
+  const { jogoId, titulo, imagem, nota, positivo, avaliadoEm } = req.body ?? {};
+  const errors = [];
+
+  if (jogoId === undefined) {
+    errors.push('"jogoId" é obrigatório.');
+  }
+
+  if (!titulo || typeof titulo !== "string") {
+    errors.push('"titulo" é obrigatório e deve ser uma string.');
+  }
+
+  const notaInformada = nota !== undefined;
+  const positivoInformado = typeof positivo === "boolean";
+
+  if (!notaInformada && !positivoInformado) {
+    errors.push('Informe "nota" (0-100) ou "positivo" (booleano).');
+  }
+
+  if (notaInformada) {
+    const numeroNota = Number(nota);
+    if (!Number.isFinite(numeroNota)) {
+      errors.push('"nota" deve ser um número.');
+    }
+  }
+
+  if (errors.length > 0) {
+    return res.status(400).json({ sucesso: false, erros: errors });
+  }
+
+  let novaAvaliacao;
+  try {
+    const jaExistia = Array.isArray(baseUser.avaliacoes)
+      ? baseUser.avaliacoes.some(
+          (avaliacao) => avaliacao.jogoId === Number(jogoId)
+        )
+      : false;
+
+    novaAvaliacao = UserModel.addReview(id, {
+      jogoId,
+      titulo,
+      imagem,
+      nota,
+      positivo,
+      avaliadoEm,
+    });
+
+    const updatedProfile = buildUserProfile(UserModel.findById(id));
+
+    return res.status(jaExistia ? 200 : 201).json({
+      sucesso: true,
+      mensagem: jaExistia
+        ? "Avaliação atualizada com sucesso."
+        : "Avaliação registrada com sucesso.",
+      dados: updatedProfile,
+      avaliacao: novaAvaliacao,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      sucesso: false,
+      mensagem: "Não foi possível registrar a avaliação.",
+      erro: error instanceof Error ? error.message : String(error),
+    });
+  }
 };
 
 module.exports = userController;

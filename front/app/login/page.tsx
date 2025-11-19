@@ -7,7 +7,7 @@ import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000/api";
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<
     { type: "success" | "error"; text: string } | null
@@ -44,7 +44,7 @@ export default function LoginPage() {
 
     try {
       const response = await fetch(
-        `${apiUrl}/api/users/login`,
+        `${apiUrl}/users/login`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -57,16 +57,21 @@ export default function LoginPage() {
           type: "error",
           text: body?.mensagem ?? "Credenciais inválidas.",
         });
+        window.localStorage.removeItem("authUserProfile");
         return;
+      }
+      if (body?.dados) {
+        window.localStorage.setItem("authUserProfile", JSON.stringify(body.dados));
       }
       setFeedback({
         type: "success",
         text: body?.mensagem ?? "Login realizado com sucesso.",
       });
       form.reset();
-      router.push("/");
+      router.push("/usuario");
     } catch {
       setFeedback({ type: "error", text: "Erro de conexão com o servidor." });
+      window.localStorage.removeItem("authUserProfile");
     } finally {
       setIsSubmitting(false);
     }

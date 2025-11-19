@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Dimensions, SafeAreaView, ScrollView } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import styled from '../utils/styled';
@@ -6,7 +6,9 @@ import { theme } from '../../constants/theme';
 import { Title, Text, Spacer } from '../components/atoms/Container';
 import Button from '../components/atoms/Button';
 import Rating from '../components/molecules/Rating';
-import { Game } from '../types';
+import ApiService from '../services/api';
+import { mapApiResponseToGame } from '../services/gameMapper';
+import { ApiError, Game } from '../types';
 
 const { width } = Dimensions.get('window');
 
@@ -77,55 +79,128 @@ const VoteHint = styled.Text`
   font-size: ${theme.fonts.size.small}px;
 `;
 
+const VoteFeedbackMessage = styled.Text`
+  color: ${theme.colors.success};
+  font-size: ${theme.fonts.size.small}px;
+  text-align: center;
+`;
+
+const VoteErrorMessage = styled.Text`
+  color: ${theme.colors.error};
+  font-size: ${theme.fonts.size.small}px;
+  text-align: center;
+`;
+
 export default function GameDetailScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const [loading, setLoading] = useState(true);
   const [game, setGame] = useState<Game | null>(null);
   const [userVote, setUserVote] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+  const [isSavingVote, setIsSavingVote] = useState(false);
+  const [voteFeedback, setVoteFeedback] = useState<string | null>(null);
+  const [voteError, setVoteError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadGameDetails();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const gameId = useMemo(() => {
+    const rawId = (params as Record<string, unknown>)?.id;
 
-  const loadGameDetails = async () => {
+    if (Array.isArray(rawId) && rawId.length > 0) {
+      const parsed = Number(rawId[0]);
+      return Number.isFinite(parsed) ? parsed : null;
+    }
+
+    if (typeof rawId === 'string') {
+      const parsed = Number(rawId);
+      return Number.isFinite(parsed) ? parsed : null;
+    }
+
+    return null;
+  }, [params]);
+
+  const loadGameDetails = useCallback(async (id: number) => {
+    setLoading(true);
+    setError(null);
+
     try {
-      // TODO: Carregar detalhes reais da API
-      const mockGame: Game = {
-        id: Number(params.id) || 1,
-        title: "The Witcher 3: Wild Hunt",
-        image: "https://via.placeholder.com/800x480/0788d9/ffffff?text=Witcher+3",
-        rating: 4.8,
-        description: "Você é Geralt de Rívia, caçador de monstros mercenário. Você tem à sua disposição todas as ferramentas do ofício: lâminas profissionais, poções preparadas e habilidades de combate - tudo isso para ser usado contra uma nova ameaça.\n\nExplore um mundo de fantasia aberto e vibrante: trace seu próprio caminho para a aventura, faça escolhas que terão consequências e procure por um poder misterioso do mito antigo.",
-        releaseDate: "19 de maio de 2015",
-        genre: "RPG, Ação, Aventura",
-        developer: "CD PROJEKT RED",
-        platform: ["PC", "PlayStation", "Xbox", "Nintendo Switch"],
-      };
+      const response = await ApiService.getGameById(id);
+      const mapped = mapApiResponseToGame(response);
 
-      setGame(mockGame);
+      if (!mapped) {
+        throw new Error('Não foi possível carregar os detalhes deste jogo.');
+      }
+
+      setGame(mapped);
+      setVoteFeedback(null);
+      setVoteError(null);
       setUserVote(0);
-    } catch (error) {
-      console.error('Erro ao carregar detalhes:', error);
+    } catch (err) {
+      const message =
+        typeof (err as ApiError)?.message === 'string'
+          ? (err as ApiError).message
+          : err instanceof Error
+            ? err.message
+            : 'Não foi possível carregar os detalhes deste jogo.';
+
+      setError(message);
+      setGame(null);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const handleVote = (vote: number) => {
-    setUserVote(vote);
-  };
-
-  const handleSaveVote = () => {
-    if (!game || userVote === 0) {
+  useEffect(() => {
+    if (gameId == null) {
+      setGame(null);
+      setError('Jogo não encontrado.');
+      setLoading(false);
       return;
     }
 
-    console.log('Salvando voto:', {
-      gameId: game.id,
-      vote: userVote,
-    });
+    loadGameDetails(gameId);
+  }, [gameId, loadGameDetails]);
+
+  const handleVote = (vote: number) => {
+    setUserVote(vote);
+    setVoteFeedback(null);
+    setVoteError(null);
+  };
+
+  const handleSaveVote = async () => {
+    if (!game || userVote === 0 || isSavingVote) {
+      return;
+    }
+
+    try {
+      setIsSavingVote(true);
+      setVoteFeedback(null);
+      setVoteError(null);
+
+      const response = await ApiService.rateGame(game.id, userVote === 1);
+
+      if (response?.sucesso === false) {
+        const message = response.erro || response.mensagem;
+        throw new Error(message || 'Não foi possível registrar a avaliação.');
+      }
+
+      const message =
+        response?.mensagem ||
+        (userVote === 1
+          ? 'Avaliação positiva registrada com sucesso.'
+          : 'Avaliação negativa registrada com sucesso.');
+
+      setVoteFeedback(message);
+    } catch (err) {
+      const message =
+        typeof (err as ApiError)?.message === 'string'
+          ? (err as ApiError).message
+          : err instanceof Error
+            ? err.message
+            : 'Não foi possível registrar a avaliação.';
+      setVoteError(message);
+    } finally {
+      setIsSavingVote(false);
+    }
   };
 
   if (loading) {
@@ -140,16 +215,20 @@ export default function GameDetailScreen() {
     );
   }
 
-  if (!game) {
+  if (!loading && !game) {
     return (
       <SafeScreen>
         <LoadingContainer>
-          <Text>Jogo não encontrado</Text>
+          <Text>{error ?? 'Jogo não encontrado'}</Text>
           <Spacer />
           <Button onPress={() => router.back()}>Voltar</Button>
         </LoadingContainer>
       </SafeScreen>
     );
+  }
+
+  if (!game) {
+    return null;
   }
 
   return (
@@ -167,7 +246,7 @@ export default function GameDetailScreen() {
           <Spacer />
 
           <InfoLabel>Descrição</InfoLabel>
-          <InfoValue>{game.description}</InfoValue>
+          <InfoValue>{game.description ?? 'Descrição não disponível.'}</InfoValue>
 
           {game.genre && (
             <>
@@ -190,10 +269,17 @@ export default function GameDetailScreen() {
             </>
           )}
 
-          {game.platform && (
+          {Array.isArray(game.platform) && game.platform.length > 0 && (
             <>
               <InfoLabel>Plataformas</InfoLabel>
               <InfoValue>{game.platform.join(', ')}</InfoValue>
+            </>
+          )}
+
+          {game.price && (
+            <>
+              <InfoLabel>Preço</InfoLabel>
+              <InfoValue>{game.price}</InfoValue>
             </>
           )}
 
@@ -213,10 +299,18 @@ export default function GameDetailScreen() {
               {userVote === 0 ? (
                 <VoteHint>Selecione uma opção para votar.</VoteHint>
               ) : (
-                <Button onPress={handleSaveVote}>
-                  Salvar
+                <Button onPress={handleSaveVote} loading={isSavingVote} disabled={isSavingVote}>
+                  {isSavingVote ? 'Salvando...' : 'Salvar'}
                 </Button>
               )}
+
+              {voteFeedback ? (
+                <VoteFeedbackMessage>{voteFeedback}</VoteFeedbackMessage>
+              ) : null}
+
+              {voteError ? (
+                <VoteErrorMessage>{voteError}</VoteErrorMessage>
+              ) : null}
             </VoteActions>
           </VoteCard>
         </Content>

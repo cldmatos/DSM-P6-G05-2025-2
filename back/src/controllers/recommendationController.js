@@ -3,9 +3,9 @@
  * Gerencia requisições de recomendações personalizadas
  */
 
-const { flaskAPI } = require('../middleware/flaskProxy');
-const { enrichGameImages } = require('../middleware/imageEnricher');
-const UserModel = require('../models/userModel');
+const { flaskAPI } = require("../middleware/flaskProxy");
+const { enrichGameImages } = require("../middleware/imageEnricher");
+const UserModel = require("../models/userModel");
 
 const recommendationController = {
   /**
@@ -18,17 +18,17 @@ const recommendationController = {
 
       // Buscar usuário e suas categorias
       const users = UserModel.findAll();
-      const user = users.find((u) => u.id === parseInt(userId));
+      const user = UserModel.findById(userId);
 
       if (!user) {
         return res.status(404).json({
-          erro: 'Usuário não encontrado',
+          erro: "Usuário não encontrado",
         });
       }
 
       if (!user.categorias || user.categorias.length === 0) {
         return res.status(400).json({
-          erro: 'Usuário não possui categorias definidas',
+          erro: "Usuário não possui categorias definidas",
         });
       }
 
@@ -36,12 +36,12 @@ const recommendationController = {
       const categorias = user.categorias.slice(0, 4);
 
       // Chamar Flask para obter recomendações
-      const response = await flaskAPI.get('/jogos/categorias', {
+      const response = await flaskAPI.get("/jogos/categorias", {
         params: {
-          cat1: categorias[0] || '',
-          cat2: categorias[1] || '',
-          cat3: categorias[2] || '',
-          cat4: categorias[3] || '',
+          cat1: categorias[0] || "",
+          cat2: categorias[1] || "",
+          cat3: categorias[2] || "",
+          cat4: categorias[3] || "",
           limite: limit,
         },
       });
@@ -72,7 +72,7 @@ const recommendationController = {
     try {
       const { limit = 10 } = req.query;
 
-      const response = await flaskAPI.get('/ranking/populares', {
+      const response = await flaskAPI.get("/ranking/populares", {
         params: { limite: limit },
       });
 
@@ -100,7 +100,7 @@ const recommendationController = {
     try {
       const { limit = 10, minRatings = 5 } = req.query;
 
-      const response = await flaskAPI.get('/ranking/melhores', {
+      const response = await flaskAPI.get("/ranking/melhores", {
         params: {
           limite: limit,
           min_avaliacoes: minRatings,
@@ -159,18 +159,18 @@ const recommendationController = {
    */
   async getSystemHealth(req, res, next) {
     try {
-      const response = await flaskAPI.get('/health');
+      const response = await flaskAPI.get("/health");
 
       return res.json({
         sucesso: true,
-        backend: 'online',
+        backend: "online",
         flask: response.data,
       });
     } catch (error) {
       return res.json({
         sucesso: false,
-        backend: 'online',
-        flask: 'offline',
+        backend: "online",
+        flask: "offline",
         erro: error.message,
       });
     }

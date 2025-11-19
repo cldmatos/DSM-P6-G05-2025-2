@@ -1,17 +1,88 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { AuthResponse, LoginCredentials, RegisterData, User, ApiError } from '../types';
+import { Platform } from 'react-native';
+import { User, ApiError } from '../types';
 
-// Configuração da API - Ajuste conforme seu ambiente
-const API_BASE_URL = __DEV__
-  ? 'http://10.0.2.2:3000/api' // Android emulator
-  : 'https://seu-backend-prod.com/api'; // Produção
-
-// Para iOS: 'http://localhost:3000/api'
-// Para Device local: 'http://192.168.x.x:3000/api' (substitua pelo IP da sua máquina)
+const DEFAULT_DEV_API_URL = 'http://10.0.2.2:3000/api';
+const DEFAULT_WEB_DEV_API_URL = 'http://localhost:3000/api';
+const DEFAULT_PROD_API_URL = 'https://seu-backend-prod.com/api';
 
 const TOKEN_KEY = '@GameList:token';
 const USER_KEY = '@GameList:user';
+
+const stripTrailingSlash = (value: string) => value.replace(/\/+$/, '');
+
+const toFiniteNumber = (value: unknown): number | null => {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (trimmed.length === 0) {
+      return null;
+    }
+
+    const parsed = Number(trimmed);
+    if (Number.isFinite(parsed)) {
+      return parsed;
+    }
+  }
+
+  return null;
+};
+
+const adjustUrlForPlatform = (rawUrl: string): string => {
+  if (!rawUrl) {
+    return rawUrl;
+  }
+
+  if (Platform.OS === 'web' && /^https?:\/\/10\.0\.2\.2/.test(rawUrl)) {
+    return rawUrl.replace('10.0.2.2', 'localhost');
+  }
+
+  return rawUrl;
+};
+
+const getDevFallbackUrl = () =>
+  Platform.select<string | undefined>({
+    ios: DEFAULT_WEB_DEV_API_URL,
+    android: DEFAULT_DEV_API_URL,
+    web: DEFAULT_WEB_DEV_API_URL,
+    default: DEFAULT_DEV_API_URL,
+  }) ?? DEFAULT_DEV_API_URL;
+
+const resolveApiBaseUrl = (): string => {
+  const envUrl = typeof process.env.EXPO_PUBLIC_API_URL === 'string'
+    ? process.env.EXPO_PUBLIC_API_URL.trim()
+    : '';
+
+  if (envUrl.length > 0) {
+    return stripTrailingSlash(adjustUrlForPlatform(envUrl));
+  }
+
+  const fallback = __DEV__ ? getDevFallbackUrl() : DEFAULT_PROD_API_URL;
+  return stripTrailingSlash(adjustUrlForPlatform(fallback));
+};
+
+const API_BASE_URL = resolveApiBaseUrl();
+
+type BackendCategoriesResponse = {
+  categorias?: unknown;
+  [key: string]: unknown;
+};
+
+type BackendUser = {
+  id?: unknown;
+  nome?: unknown;
+  name?: unknown;
+  email?: unknown;
+  avatar?: unknown;
+  criadoEm?: unknown;
+  createdAt?: unknown;
+  categorias?: unknown;
+  [key: string]: unknown;
+};
 
 class ApiService {
   private api: AxiosInstance;
@@ -53,10 +124,23 @@ class ApiService {
 
   private handleError(error: AxiosError): ApiError {
     if (error.response) {
+      const data = error.response.data as Record<string, unknown> | undefined;
+      const rawErrors = Array.isArray((data as any)?.erros)
+        ? ((data as any).erros as unknown[]).filter((item): item is string => typeof item === 'string')
+        : [];
+
+      const message =
+        (typeof (data as any)?.mensagem === 'string' && (data as any).mensagem) ||
+        (typeof (data as any)?.erro === 'string' && (data as any).erro) ||
+        (rawErrors.length ? rawErrors.join(' ') : undefined) ||
+        error.message ||
+        'Erro ao processar requisição';
+
       return {
-        message: (error.response.data as any)?.message || 'Erro ao processar requisição',
+        message,
         statusCode: error.response.status,
-        code: (error.response.data as any)?.code,
+        code: typeof (data as any)?.code === 'string' ? (data as any).code : undefined,
+        details: data,
       };
     } else if (error.request) {
       return {
@@ -76,9 +160,24 @@ class ApiService {
 
   async login(email: string, senha: string): Promise<any> {
     const response = await this.api.post('/users/login', { email, senha });
-    if (response.data.dados) {
-      await this.saveAuth(response.data.dados);
+    if (response.data?.dados) {
+      const user = await this.saveAuth(response.data.dados);
+      const token = this.extractToken(response.data);
+      await this.persistToken(token);
+
+      const normalizedResponse: Record<string, unknown> = {
+        ...response.data,
+        dados: user,
+      };
+
+      if (token) {
+        normalizedResponse.token = token;
+      }
+
+      return normalizedResponse;
     }
+
+    await this.clearAuth();
     return response.data;
   }
 
@@ -90,26 +189,39 @@ class ApiService {
     categorias: string[];
   }): Promise<any> {
     const response = await this.api.post('/users', data);
-    if (response.data.dados) {
-      await this.saveAuth(response.data.dados);
+    if (response.data?.dados) {
+      const normalized = this.normalizeUser(response.data.dados);
+      return { ...response.data, dados: normalized };
     }
+
     return response.data;
   }
 
   async logout(): Promise<void> {
-    try {
-      await this.api.post('/users/logout');
-    } finally {
-      await this.clearAuth();
+    await this.clearAuth();
+  }
+
+  async getProfile(): Promise<User | null> {
+    const stored = await this.getStoredUser();
+    if (!stored?.id) {
+      return null;
     }
+
+    try {
+      const response = await this.api.get(`/users/${stored.id}`);
+      if (response.data?.dados) {
+        return this.saveAuth(response.data.dados);
+      }
+    } catch (error) {
+      if (__DEV__) {
+        console.warn('Falha ao atualizar perfil:', error);
+      }
+    }
+
+    return stored;
   }
 
-  async getProfile(): Promise<User> {
-    const response = await this.api.get('/users/profile');
-    return response.data.dados;
-  }
-
-  async getCategories(): Promise<any> {
+  async getCategories(): Promise<BackendCategoriesResponse> {
     const response = await this.api.get('/users/categories');
     return response.data;
   }
@@ -191,28 +303,154 @@ class ApiService {
   // AUTH STORAGE
   // ========================================================================
 
-  private async saveAuth(user: any): Promise<void> {
-    await AsyncStorage.multiSet([
-      [USER_KEY, JSON.stringify(user)],
-    ]);
+  private normalizeUser(payload: unknown): User {
+    if (!payload || typeof payload !== 'object') {
+      return {
+        id: 0,
+        name: 'Usuário',
+        email: '',
+        raw: {},
+      };
+    }
+
+    const data = payload as BackendUser;
+    const idValue = toFiniteNumber(data.id);
+    const email = typeof data.email === 'string' ? data.email.trim() : '';
+
+    const avatar =
+      typeof data.avatar === 'string' && data.avatar.trim().length > 0
+        ? data.avatar.trim()
+        : undefined;
+
+    const rawName =
+      typeof data.nome === 'string'
+        ? data.nome
+        : typeof data.name === 'string'
+          ? data.name
+          : undefined;
+
+    let name = rawName && typeof rawName === 'string' ? rawName.trim() : '';
+
+    if (!name && email) {
+      const [emailName] = email.split('@');
+      name = emailName || '';
+    }
+
+    if (!name) {
+      name = 'Usuário';
+    }
+
+    const rawCategories = Array.isArray(data.categorias)
+      ? data.categorias
+      : Array.isArray((data as any).categories)
+        ? ((data as any).categories as unknown[])
+        : undefined;
+
+    const categories = rawCategories
+      ? rawCategories
+        .map((item) => (typeof item === 'string' ? item.trim() : ''))
+        .filter((item) => item.length > 0)
+      : undefined;
+
+    const createdAt =
+      typeof data.criadoEm === 'string'
+        ? data.criadoEm
+        : typeof data.createdAt === 'string'
+          ? data.createdAt
+          : undefined;
+
+    return {
+      id: idValue && idValue > 0 ? idValue : 0,
+      name,
+      email,
+      avatar,
+      createdAt,
+      categories,
+      raw: data as Record<string, unknown>,
+    };
+  }
+
+  private async saveAuth(userPayload: unknown): Promise<User> {
+    const normalized = this.normalizeUser(userPayload);
+    await AsyncStorage.setItem(USER_KEY, JSON.stringify(normalized));
+    return normalized;
+  }
+
+  private extractToken(payload: unknown): string | null {
+    if (!payload || typeof payload !== 'object') {
+      return null;
+    }
+
+    const candidates: unknown[] = [];
+    const data = payload as Record<string, unknown>;
+
+    candidates.push(data.token);
+
+    if (data.accessToken) {
+      candidates.push(data.accessToken);
+    }
+
+    if (typeof data.dados === 'object' && data.dados !== null) {
+      const nested = data.dados as Record<string, unknown>;
+      candidates.push(nested.token);
+      if (nested.accessToken) {
+        candidates.push(nested.accessToken);
+      }
+    }
+
+    for (const candidate of candidates) {
+      if (typeof candidate === 'string') {
+        const trimmed = candidate.trim();
+        if (trimmed.length > 0) {
+          return trimmed;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  private async persistToken(token: string | null): Promise<void> {
+    if (token) {
+      await AsyncStorage.setItem(TOKEN_KEY, token);
+    } else {
+      await AsyncStorage.removeItem(TOKEN_KEY);
+    }
   }
 
   private async clearAuth(): Promise<void> {
     await AsyncStorage.multiRemove([TOKEN_KEY, USER_KEY]);
   }
 
-  async getToken(): Promise<string | null> {
-    return await AsyncStorage.getItem(TOKEN_KEY);
+  private async getToken(): Promise<string | null> {
+    return AsyncStorage.getItem(TOKEN_KEY);
   }
 
   async getStoredUser(): Promise<User | null> {
     const userJson = await AsyncStorage.getItem(USER_KEY);
-    return userJson ? JSON.parse(userJson) : null;
+    if (!userJson) {
+      return null;
+    }
+
+    try {
+      const parsed = JSON.parse(userJson);
+      const normalized = this.normalizeUser(parsed);
+      if (!normalized.id) {
+        return null;
+      }
+      return normalized;
+    } catch (error) {
+      if (__DEV__) {
+        console.warn('Falha ao ler usuário armazenado:', error);
+      }
+      await AsyncStorage.removeItem(USER_KEY);
+      return null;
+    }
   }
 
   async isAuthenticated(): Promise<boolean> {
     const user = await this.getStoredUser();
-    return !!user;
+    return Boolean(user?.id);
   }
 }
 

@@ -8,6 +8,8 @@ export interface Game {
   genre?: string;
   developer?: string;
   platform?: string[];
+  price?: string;
+  raw?: Record<string, unknown>;
 }
 
 export interface User {
@@ -16,6 +18,8 @@ export interface User {
   email: string;
   avatar?: string;
   createdAt?: string;
+  categories?: string[];
+  raw?: Record<string, unknown>;
 }
 
 export interface LoginCredentials {
@@ -39,6 +43,7 @@ export interface ApiError {
   message: string;
   code?: string;
   statusCode?: number;
+  details?: unknown;
 }
 
 export interface GameListResponse {

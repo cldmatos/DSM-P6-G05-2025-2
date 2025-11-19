@@ -5,6 +5,8 @@ import styled from '../utils/styled';
 import { theme } from '../../constants/theme';
 import Button from '../components/atoms/Button';
 import Input from '../components/atoms/Input';
+import ApiService from '../services/api';
+import { ApiError } from '../types';
 
 const Container = styled.View`
   flex: 1;
@@ -54,6 +56,13 @@ const Footer = styled.View`
   align-items: center;
 `;
 
+const FormError = styled.Text`
+  color: ${theme.colors.error};
+  font-size: ${theme.fonts.size.small}px;
+  text-align: center;
+  margin-bottom: ${theme.spacing.sm}px;
+`;
+
 const SignUpContainer = styled.View`
   flex-direction: row;
   align-items: center;
@@ -82,6 +91,7 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
+  const [submissionError, setSubmissionError] = useState<string | null>(null);
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -91,6 +101,7 @@ export default function LoginScreen() {
   const handleLogin = async () => {
     setEmailError('');
     setPasswordError('');
+    setSubmissionError(null);
 
     let hasError = false;
 
@@ -114,23 +125,33 @@ export default function LoginScreen() {
 
     setLoading(true);
 
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      const response = await ApiService.login(email.trim(), password);
+      const message = response?.mensagem ?? 'Login realizado com sucesso!';
 
-      Alert.alert(
-        'Login realizado!',
-        `Bem-vindo, ${email}!`,
-        [
-          {
-            text: 'OK',
-            onPress: () => {
-              // @ts-ignore
-              router.replace('/(tabs)/');
-            },
-          },
-        ]
-      );
-    }, 2000);
+      try {
+        await ApiService.getProfile();
+      } catch (profileError) {
+        if (__DEV__) {
+          console.warn('Falha ao atualizar perfil apos login:', profileError);
+        }
+      }
+
+      Alert.alert('Login realizado!', message);
+      router.replace('/(tabs)/profile');
+    } catch (err) {
+      const message =
+        typeof (err as ApiError)?.message === 'string'
+          ? (err as ApiError).message
+          : err instanceof Error
+            ? err.message
+            : 'Não foi possível realizar login.';
+
+      setSubmissionError(message);
+      Alert.alert('Erro ao entrar', message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleForgotPassword = () => {
@@ -169,6 +190,7 @@ export default function LoginScreen() {
               onChangeText={(text) => {
                 setEmail(text);
                 setEmailError('');
+                setSubmissionError(null);
               }}
               error={emailError}
               keyboardType="email-address"
@@ -184,6 +206,7 @@ export default function LoginScreen() {
               onChangeText={(text) => {
                 setPassword(text);
                 setPasswordError('');
+                setSubmissionError(null);
               }}
               error={passwordError}
               secureTextEntry={true}
@@ -205,6 +228,8 @@ export default function LoginScreen() {
             >
               {loading ? 'Entrando...' : 'Entrar'}
             </Button>
+
+            {submissionError ? <FormError>{submissionError}</FormError> : null}
           </FormContainer>
 
           <Footer>

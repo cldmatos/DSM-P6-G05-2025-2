@@ -85,17 +85,19 @@ export default function ProfileScreen() {
   }, []);
 
   const loadProfile = async () => {
+    setLoading(true);
     try {
       const storedUser = await ApiService.getStoredUser();
+      if (!storedUser) {
+        setUser(null);
+        return;
+      }
 
-      if (storedUser) {
-        setUser(storedUser);
-      } else {
-        setUser({
-          id: 1,
-          name: "Usuário Teste",
-          email: "usuario@teste.com",
-        });
+      setUser(storedUser);
+
+      const refreshedUser = await ApiService.getProfile();
+      if (refreshedUser) {
+        setUser(refreshedUser);
       }
     } catch (error) {
       console.error('Erro ao carregar perfil:', error);

@@ -8,7 +8,7 @@ import CategoriesModal from "@/components/organisms/CategoriesModal";
 import { useRouter } from "next/navigation";
 
 export default function SignUpPage() {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000/api";
   const defaultGenres = [
     "acao",
     "aventura",
@@ -27,11 +27,11 @@ export default function SignUpPage() {
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const router = useRouter();
-  const maxGenreSelections = 3;
+  const maxGenreSelections = 4;
 
   useEffect(() => {
     const controller = new AbortController();
-    fetch(`${apiUrl.replace(/\/$/, "")}/api/users/categories`, { signal: controller.signal })
+    fetch(`${apiUrl.replace(/\/$/, "")}/users/categories`, { signal: controller.signal })
       .then((res) => (res.ok ? res.json() : Promise.reject()))
       .then((data) => {
         if (Array.isArray(data?.categorias) && data.categorias.length) {
@@ -105,7 +105,7 @@ export default function SignUpPage() {
     setFeedback(null);
 
     try {
-      const response = await fetch(`${apiUrl}/api/users`, {
+      const response = await fetch(`${apiUrl}/users`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

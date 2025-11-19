@@ -171,7 +171,7 @@ const defaultGenres = [
   'puzzle',
 ];
 
-const maxGenreSelections = 3;
+const maxGenreSelections = 4;
 
 const formatLabel = (value: string) =>
   value
@@ -368,7 +368,7 @@ export default function SignUpScreen() {
         >
           <Header>
             <Title>Crie sua conta</Title>
-            <Subtitle>Personalize suas recomendacoes escolhendo ate tres generos favoritos</Subtitle>
+            <Subtitle>Personalize suas recomendacoes escolhendo ate quatro generos favoritos</Subtitle>
           </Header>
 
           <FormCard>
@@ -473,7 +473,7 @@ export default function SignUpScreen() {
       <Modal visible={isModalVisible} transparent animationType="fade">
         <ModalOverlay>
           <ModalContent>
-            <ModalTitle>Selecione ate tres generos</ModalTitle>
+            <ModalTitle>Selecione ate quatro generos</ModalTitle>
             <ModalDescription>Personalize suas recomendacoes escolhendo os generos que mais gosta.</ModalDescription>
 
             <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 260 }}>

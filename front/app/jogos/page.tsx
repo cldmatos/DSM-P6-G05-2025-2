@@ -1,36 +1,182 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Footer from "@/components/organisms/Footer";
 import Header from "@/components/organisms/Header";
 import CardsGallery from "@/components/organisms/CardsGallery";
+import {
+  getBestRatedGames,
+  getPopularGames,
+  getUserRecommendations,
+  searchGames,
+} from "@/lib/api";
+import {
+  GameCardData,
+  mapApiResponseToCardGames,
+} from "@/lib/gameMappers";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { useRouter } from "next/navigation";
+import { getStoredUserId } from "@/lib/userStorage";
 
 export default function GamesPage() {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
+  const [games, setGames] = useState<GameCardData[]>([]);
+  const [displayedGames, setDisplayedGames] = useState<GameCardData[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSearching, setIsSearching] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [searchError, setSearchError] = useState<string | null>(null);
+  const [currentSource, setCurrentSource] = useState<string>("");
 
-  const allGames = [
-    { id: 1, title: "The Witcher 3: Wild Hunt", image: "/games/witcher3.png", rating: 96 },
-    { id: 2, title: "Elden Ring", image: "/games/eldenring.png", rating: 94 },
-    { id: 3, title: "Red Dead Redemption 2", image: "/games/rdr2.png", rating: 98 },
-    { id: 4, title: "Cyberpunk 2077", image: "/games/cyberpunk.png", rating: 86 },
-    { id: 5, title: "Baldur's Gate 3", image: "/games/baldurs.png", rating: 98 },
-    { id: 6, title: "God of War Ragnarök", image: "/games/gow.png", rating: 96 },
-    { id: 7, title: "Hogwarts Legacy", image: "/games/hogwarts.png", rating: 90 },
-    { id: 8, title: "Starfield", image: "/games/starfield.png", rating: 84 },
-    { id: 9, title: "The Last of Us Part II", image: "/games/tlou2.png", rating: 92 },
-    { id: 10, title: "Spider-Man 2", image: "/games/spiderman.png", rating: 96 },
-  ];
+  useEffect(() => {
+    let cancelled = false;
 
-  const filteredGames = allGames.filter((game) =>
-    game.title.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+    async function loadGames() {
+      try {
+        setIsLoading(true);
+        setErrorMessage(null);
+        setCurrentSource("");
+
+        // Busca recomendações personalizadas e cai para rankings se necessário.
+        const storedUserId = getStoredUserId();
+        let fetchedGames: GameCardData[] = [];
+
+        if (storedUserId) {
+          const personalizedResponse = await getUserRecommendations(
+            storedUserId,
+            60
+          );
+          if (cancelled) return;
+
+          if (personalizedResponse.sucesso !== false) {
+            const personalizedGames = mapApiResponseToCardGames(
+              personalizedResponse
+            );
+
+            if (personalizedGames.length > 0) {
+              fetchedGames = personalizedGames;
+              setCurrentSource("Recomendações personalizadas");
+            }
+          }
+        }
+
+        if (!cancelled && fetchedGames.length === 0) {
+          const bestRatedResponse = await getBestRatedGames(60, 20);
+          if (cancelled) return;
+
+          if (bestRatedResponse.sucesso !== false) {
+            const bestRatedGames = mapApiResponseToCardGames(bestRatedResponse);
+            if (bestRatedGames.length > 0) {
+              fetchedGames = bestRatedGames;
+              setCurrentSource("Jogos mais bem avaliados");
+            }
+          }
+        }
+
+        if (!cancelled && fetchedGames.length === 0) {
+          const popularResponse = await getPopularGames(60);
+          if (cancelled) return;
+
+          if (popularResponse.sucesso !== false) {
+            const popularGames = mapApiResponseToCardGames(popularResponse);
+            if (popularGames.length > 0) {
+              fetchedGames = popularGames;
+              setCurrentSource("Jogos populares");
+            }
+          }
+        }
+
+        if (fetchedGames.length === 0) {
+          throw new Error("Não foi possível obter jogos recomendados.");
+        }
+
+        setGames(fetchedGames);
+        setDisplayedGames(fetchedGames);
+      } catch (error) {
+        console.error("Erro ao listar jogos:", error);
+        if (!cancelled) {
+          setErrorMessage("Não foi possível carregar os jogos recomendados.");
+          setGames([]);
+          setDisplayedGames([]);
+          setCurrentSource("");
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadGames();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      setDisplayedGames(games);
+      setSearchError(null);
+      setIsSearching(false);
+      return;
+    }
+
+    let cancelled = false;
+    const term = searchTerm.trim();
+    setIsSearching(true);
+    setSearchError(null);
+
+    const timeoutId = window.setTimeout(async () => {
+      try {
+        const response = await searchGames(term);
+        if (cancelled) return;
+
+        if (response.sucesso === false) {
+          setSearchError(
+            response.erro || response.mensagem || "Erro ao buscar jogos."
+          );
+          setDisplayedGames([]);
+          return;
+        }
+
+        const results = mapApiResponseToCardGames(response);
+        setDisplayedGames(results);
+        if (results.length === 0) {
+          setSearchError("Nenhum jogo encontrado para este termo.");
+        }
+      } catch (error) {
+        console.error("Erro na busca de jogos:", error);
+        if (!cancelled) {
+          setSearchError("Erro ao buscar jogos. Tente novamente mais tarde.");
+          setDisplayedGames([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsSearching(false);
+        }
+      }
+    }, 400);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeoutId);
+    };
+  }, [searchTerm, games]);
 
   const handleGameClick = (gameId: number) => {
     router.push(`/jogo/${gameId}`);
   };
+
+  const totalLabel = searchTerm.trim()
+    ? `${displayedGames.length} ${displayedGames.length === 1 ? "jogo encontrado" : "jogos encontrados"
+    }`
+    : `${displayedGames.length} ${displayedGames.length === 1
+      ? "jogo recomendado"
+      : "jogos recomendados"
+    }`;
+  const showSourceMessage = !searchTerm.trim() && currentSource;
 
   return (
     <>
@@ -52,15 +198,33 @@ export default function GamesPage() {
               />
             </div>
             <p className="text-center text-muted mt-4">
-              {filteredGames.length} {filteredGames.length === 1 ? "jogo encontrado" : "jogos encontrados"}
+              {isSearching
+                ? "Buscando jogos..."
+                : totalLabel}
             </p>
+            {showSourceMessage && (
+              <p className="text-center text-muted/80 mt-1 text-sm">
+                {currentSource}
+              </p>
+            )}
+            {searchError && (
+              <p className="text-center text-red-400 mt-2 text-sm">{searchError}</p>
+            )}
           </div>
         </section>
 
         <section className="px-4 py-8 md:py-12">
           <div className="max-w-7xl mx-auto">
-            {filteredGames.length > 0 ? (
-              <CardsGallery games={filteredGames} onGameClick={handleGameClick} />
+            {errorMessage ? (
+              <div className="text-center py-20">
+                <p className="text-2xl text-red-400">{errorMessage}</p>
+              </div>
+            ) : isLoading ? (
+              <div className="text-center py-20">
+                <p className="text-2xl text-muted">Carregando jogos...</p>
+              </div>
+            ) : displayedGames.length > 0 ? (
+              <CardsGallery games={displayedGames} onGameClick={handleGameClick} />
             ) : (
               <div className="text-center py-20">
                 <p className="text-2xl text-muted">Nenhum jogo encontrado</p>

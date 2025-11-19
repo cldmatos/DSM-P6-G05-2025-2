@@ -1,68 +1,105 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Button from "@/components/atoms/Button";
 import GameCard from "@/components/molecules/Cards";
 import Footer from "@/components/organisms/Footer";
 import Header from "@/components/organisms/Header";
+import {
+  getBestRatedGames,
+  getPopularGames,
+  getUserRecommendations,
+} from "@/lib/api";
+import {
+  GameCardData,
+  mapApiResponseToCardGames,
+} from "@/lib/gameMappers";
 import { SparklesIcon, ArrowTrendingUpIcon } from "@heroicons/react/24/solid";
 import { useRouter } from "next/navigation";
+import { getStoredUserId } from "@/lib/userStorage";
 
 export default function Home() {
   const router = useRouter();
+  const [recommendedGames, setRecommendedGames] = useState<GameCardData[]>([]);
+  const [popularGames, setPopularGames] = useState<GameCardData[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const recommendedGames = [
-    {
-      id: 1,
-      title: "The Witcher 3: Wild Hunt",
-      image: "/games/witcher3.png",
-      rating: 96,
-    },
-    {
-      id: 2,
-      title: "Elden Ring",
-      image: "/games//eldenring.png",
-      rating: 94,
-    },
-    {
-      id: 3,
-      title: "Red Dead Redemption 2",
-      image: "/games/rdr2.png",
-      rating: 98,
-    },
-    {
-      id: 4,
-      title: "Cyberpunk 2077",
-      image: "/games/cyberpunk.png",
-      rating: 86,
-    },
-  ];
+  useEffect(() => {
+    let cancelled = false;
 
-  const popularGames = [
-    {
-      id: 5,
-      title: "Baldur's Gate 3",
-      image: "/games/baldurs.png",
-      rating: 98,
-    },
-    {
-      id: 6,
-      title: "God of War Ragnarök",
-      image: "/games/gow.png",
-      rating: 96,
-    },
-    {
-      id: 7,
-      title: "Hogwarts Legacy",
-      image: "/games/hogwarts.png",
-      rating: 90,
-    },
-    {
-      id: 8,
-      title: "Starfield",
-      image: "/games/starfield.png",
-      rating: 84,
-    },
-  ];
+    async function loadHomeGames() {
+      try {
+        setIsLoading(true);
+        setErrorMessage(null);
+
+        const bestRatedResponse = await getBestRatedGames(8, 20);
+        if (cancelled) return;
+
+        if (bestRatedResponse.sucesso === false) {
+          throw new Error(
+            bestRatedResponse.erro ||
+            bestRatedResponse.mensagem ||
+            "Erro ao carregar jogos mais bem avaliados."
+          );
+        }
+
+        const bestRatedGames = mapApiResponseToCardGames(bestRatedResponse);
+        setRecommendedGames(bestRatedGames);
+
+        const popularResponse = await getPopularGames(8);
+        if (cancelled) return;
+
+        if (popularResponse.sucesso === false) {
+          throw new Error(
+            popularResponse.erro ||
+            popularResponse.mensagem ||
+            "Erro ao carregar jogos populares."
+          );
+        }
+
+        setPopularGames(mapApiResponseToCardGames(popularResponse));
+
+        const storedUserId = getStoredUserId();
+        if (storedUserId) {
+          const personalizedResponse = await getUserRecommendations(
+            storedUserId,
+            8
+          );
+          if (cancelled) return;
+
+          if (personalizedResponse.sucesso !== false) {
+            const personalizedGames = mapApiResponseToCardGames(
+              personalizedResponse
+            );
+
+            if (personalizedGames.length > 0) {
+              setRecommendedGames(personalizedGames);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Erro ao carregar dados iniciais:", error);
+        if (!cancelled) {
+          setErrorMessage(
+            "Não foi possível carregar os jogos. Tente novamente mais tarde."
+          );
+          setRecommendedGames([]);
+          setPopularGames([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadHomeGames();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleGameClick = (gameId: number) => {
     router.push(`/jogo/${gameId}`);
@@ -92,6 +129,9 @@ export default function Home() {
             >
               Explorar Jogos
             </Button>
+            {errorMessage && (
+              <p className="mt-6 text-red-400 text-sm">{errorMessage}</p>
+            )}
           </div>
         </section>
 
@@ -104,17 +144,27 @@ export default function Home() {
               </h2>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-              {recommendedGames.map((game) => (
-                <GameCard
-                  key={game.id}
-                  title={game.title}
-                  image={game.image}
-                  rating={game.rating}
-                  onClick={() => handleGameClick(game.id)}
-                />
-              ))}
-            </div>
+            {isLoading ? (
+              <div className="py-12 text-center text-muted">
+                Carregando jogos...
+              </div>
+            ) : recommendedGames.length > 0 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                {recommendedGames.map((game) => (
+                  <GameCard
+                    key={game.id}
+                    title={game.title}
+                    image={game.image}
+                    rating={game.rating}
+                    onClick={() => handleGameClick(game.id)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="py-12 text-center text-muted">
+                Nenhum jogo disponível no momento.
+              </div>
+            )}
           </div>
         </section>
 
@@ -133,17 +183,27 @@ export default function Home() {
               </Button>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-              {popularGames.map((game) => (
-                <GameCard
-                  key={game.id}
-                  title={game.title}
-                  image={game.image}
-                  rating={game.rating}
-                  onClick={() => handleGameClick(game.id)}
-                />
-              ))}
-            </div>
+            {isLoading ? (
+              <div className="py-12 text-center text-muted">
+                Carregando jogos...
+              </div>
+            ) : popularGames.length > 0 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                {popularGames.map((game) => (
+                  <GameCard
+                    key={game.id}
+                    title={game.title}
+                    image={game.image}
+                    rating={game.rating}
+                    onClick={() => handleGameClick(game.id)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="py-12 text-center text-muted">
+                Nenhum jogo popular encontrado agora.
+              </div>
+            )}
           </div>
         </section>
       </div>
