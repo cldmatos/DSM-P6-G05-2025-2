@@ -12,7 +12,7 @@ import json
 from dotenv import load_dotenv
 from google.cloud import pubsub_v1
 from knn_game import SistemaRecomendacaoGames
-from machine.pubsub_publish import publish_evaluation  # <-- Importa a função do pubsub_send.py
+from pubsub_publish import publish_evaluation  # <-- Importa a função do pubsub_send.py
 
 # ------------------------
 # Load env (para GOOGLE key path caso exista)

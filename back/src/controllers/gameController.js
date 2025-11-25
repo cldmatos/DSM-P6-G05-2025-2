@@ -4,8 +4,8 @@
  * Proxy para Flask Recommendation Engine
  */
 
-const { flaskAPI } = require('../middleware/flaskProxy');
-const { enrichGameImages } = require('../middleware/imageEnricher');
+const { flaskAPI } = require("../middleware/flaskProxy");
+const { enrichGameImages } = require("../middleware/imageEnricher");
 
 const gameController = {
   /**
@@ -15,7 +15,7 @@ const gameController = {
     try {
       const { page = 1, limit = 50 } = req.query;
 
-      const response = await flaskAPI.get('/jogos', {
+      const response = await flaskAPI.get("/jogos", {
         params: {
           pagina: page,
           limite: limit,
@@ -71,7 +71,9 @@ const gameController = {
         });
       }
 
-      const response = await flaskAPI.get(`/jogos/busca/${encodeURIComponent(q)}`);
+      const response = await flaskAPI.get(
+        `/jogos/busca/${encodeURIComponent(q)}`
+      );
 
       // Enriquecer com imagens
       let dados = response.data;
@@ -95,12 +97,12 @@ const gameController = {
     try {
       const { cat1, cat2, cat3, cat4, limit = 10 } = req.query;
 
-      const response = await flaskAPI.get('/jogos/categorias', {
+      const response = await flaskAPI.get("/jogos/categorias", {
         params: {
-          cat1: cat1 || '',
-          cat2: cat2 || '',
-          cat3: cat3 || '',
-          cat4: cat4 || '',
+          cat1: cat1 || "",
+          cat2: cat2 || "",
+          cat3: cat3 || "",
+          cat4: cat4 || "",
           limite: limit,
         },
       });
@@ -127,7 +129,7 @@ const gameController = {
    */
   async getRandom(req, res, next) {
     try {
-      const response = await flaskAPI.get('/jogos/aleatorio');
+      const response = await flaskAPI.get("/jogos/aleatorio");
 
       // Enriquecer com imagens
       const dados = enrichGameImages(response.data);
@@ -149,21 +151,38 @@ const gameController = {
       const { id } = req.params;
       const { positiva } = req.body;
 
-      if (typeof positiva !== 'boolean') {
+      if (typeof positiva !== "boolean") {
         return res.status(400).json({
           erro: 'Campo "positiva" é obrigatório e deve ser booleano',
         });
       }
 
-      const endpoint = positiva ? '/avaliacao/positiva' : '/avaliacao/negativa';
+      const gameId = Number.parseInt(id, 10);
+      if (!Number.isFinite(gameId)) {
+        return res.status(400).json({
+          erro: 'Parâmetro "id" inválido para jogo',
+        });
+      }
+
+      const rawUserId = req.body.userId ?? req.body.user_id;
+      const userId = Number.parseInt(rawUserId, 10);
+
+      if (!Number.isFinite(userId)) {
+        return res.status(400).json({
+          erro: 'Campo "userId" (ou "user_id") é obrigatório e deve ser numérico',
+        });
+      }
+
+      const endpoint = positiva ? "/avaliacao/positiva" : "/avaliacao/negativa";
 
       const response = await flaskAPI.post(endpoint, {
-        jogo_id: parseInt(id),
+        jogo_id: gameId,
+        user_id: userId,
       });
 
       return res.json({
         sucesso: true,
-        mensagem: response.data.message || 'Avaliação registrada com sucesso',
+        mensagem: response.data.message || "Avaliação registrada com sucesso",
         dados: response.data,
       });
     } catch (error) {

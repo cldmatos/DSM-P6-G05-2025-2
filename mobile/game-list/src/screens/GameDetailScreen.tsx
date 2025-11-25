@@ -96,6 +96,7 @@ export default function GameDetailScreen() {
   const params = useLocalSearchParams();
   const [loading, setLoading] = useState(true);
   const [game, setGame] = useState<Game | null>(null);
+  const [userId, setUserId] = useState<number | null>(null);
   const [userVote, setUserVote] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [isSavingVote, setIsSavingVote] = useState(false);
@@ -160,6 +161,26 @@ export default function GameDetailScreen() {
     loadGameDetails(gameId);
   }, [gameId, loadGameDetails]);
 
+  useEffect(() => {
+    let isMounted = true;
+
+    ApiService.getStoredUser()
+      .then((user) => {
+        if (isMounted) {
+          setUserId(user?.id ?? null);
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setUserId(null);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const handleVote = (vote: number) => {
     setUserVote(vote);
     setVoteFeedback(null);
@@ -171,12 +192,17 @@ export default function GameDetailScreen() {
       return;
     }
 
+    if (userId == null) {
+      setVoteError('Faça login para avaliar este jogo.');
+      return;
+    }
+
     try {
       setIsSavingVote(true);
       setVoteFeedback(null);
       setVoteError(null);
 
-      const response = await ApiService.rateGame(game.id, userVote === 1);
+      const response = await ApiService.rateGame(game.id, userVote === 1, userId);
 
       if (response?.sucesso === false) {
         const message = response.erro || response.mensagem;
@@ -290,13 +316,15 @@ export default function GameDetailScreen() {
               <Rating
                 rating={game.rating}
                 size="lg"
-                interactive
+                interactive={userId != null}
                 userVote={userVote}
                 onRate={handleVote}
                 showLabel={false}
               />
 
-              {userVote === 0 ? (
+              {userId == null ? (
+                <VoteHint>Faça login para avaliar este jogo.</VoteHint>
+              ) : userVote === 0 ? (
                 <VoteHint>Selecione uma opção para votar.</VoteHint>
               ) : (
                 <Button onPress={handleSaveVote} loading={isSavingVote} disabled={isSavingVote}>

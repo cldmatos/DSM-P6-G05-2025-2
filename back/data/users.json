@@ -12,5 +12,34 @@
     "salt": "608a2551c58236b6f40b69cc15b8c455",
     "criadoEm": "2025-11-18T22:55:38.476Z",
     "avaliacoes": []
+  },
+  {
+    "id": 2,
+    "nome": "Kaue",
+    "email": "jkaue987@gmail.com",
+    "categorias": [
+      "3D",
+      "Adventure",
+      "Anime"
+    ],
+    "passwordHash": "6815ac61dc1f82e712c0fa830841e2b596e76d669310a0946ea83d755c1e0b004e5add0ed2c398688eac9197b3a6188b1e046954a6ea90377b7dc4028b51ac32",
+    "salt": "f3fa48b110579cc31b98c78bd34c8f16",
+    "criadoEm": "2025-11-21T22:55:00.914Z",
+    "avaliacoes": [
+      {
+        "jogoId": 1412,
+        "titulo": "NARUTO Ultimate Ninja STORM",
+        "imagem": "https://cdn.akamai.steamstatic.com/steam/apps/495140/header.jpg?t=1580311764",
+        "nota": 100,
+        "avaliadoEm": "2025-11-25T00:07:34.112Z"
+      },
+      {
+        "jogoId": 58,
+        "titulo": "Forza Horizon 4",
+        "imagem": "https://cdn.akamai.steamstatic.com/steam/apps/1293830/header.jpg?t=1622068013",
+        "nota": 0,
+        "avaliadoEm": "2025-11-25T00:08:20.847Z"
+      }
+    ]
   }
 ]

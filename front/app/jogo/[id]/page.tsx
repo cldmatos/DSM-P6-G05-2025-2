@@ -9,6 +9,7 @@ import CardsGallery from "@/components/organisms/CardsGallery";
 import Footer from "@/components/organisms/Footer";
 import Header from "@/components/organisms/Header";
 import {
+  addUserReview,
   getGameById,
   getSimilarGames,
   rateGame,
@@ -23,6 +24,7 @@ import {
   resolveGameImage,
   splitCommaSeparated,
 } from "@/lib/gameMappers";
+import { getStoredUserId } from "@/lib/userStorage";
 import {
   CalendarIcon,
   UserGroupIcon,
@@ -41,6 +43,7 @@ export default function GamePage() {
   const [isSubmittingVote, setIsSubmittingVote] = useState(false);
   const [voteFeedback, setVoteFeedback] = useState<string | null>(null);
   const [voteError, setVoteError] = useState<string | null>(null);
+  const [userId, setUserId] = useState<number | null>(null);
 
   const gameId = useMemo(() => {
     const paramValue = params?.id;
@@ -56,6 +59,23 @@ export default function GamePage() {
 
     return null;
   }, [params]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const syncUserFromStorage = () => {
+      setUserId(getStoredUserId());
+    };
+
+    syncUserFromStorage();
+
+    window.addEventListener("storage", syncUserFromStorage);
+    return () => {
+      window.removeEventListener("storage", syncUserFromStorage);
+    };
+  }, []);
 
   useEffect(() => {
     if (gameId == null) {
@@ -138,12 +158,17 @@ export default function GamePage() {
       return;
     }
 
+    if (userId == null) {
+      setVoteError("Faça login para avaliar este jogo.");
+      return;
+    }
+
     try {
       setIsSubmittingVote(true);
       setVoteFeedback(null);
       setVoteError(null);
 
-      const response = await rateGame(gameId, userVote === 1);
+      const response = await rateGame(gameId, userVote === 1, userId);
 
       if (response.sucesso === false) {
         throw new Error(
@@ -160,6 +185,43 @@ export default function GamePage() {
           : "Avaliação negativa registrada com sucesso.");
 
       setVoteFeedback(mensagem);
+
+      if (game) {
+        try {
+          const avaliadoEm = new Date().toISOString();
+          const reviewResponse = await addUserReview(userId, {
+            jogoId: gameId,
+            titulo: game.name || `Jogo #${gameId}`,
+            imagem: resolveGameImage(game),
+            positivo: userVote === 1,
+            avaliadoEm,
+          });
+
+          if (reviewResponse.sucesso === false) {
+            console.warn(
+              "Falha ao persistir avaliação do usuário:",
+              reviewResponse.erro || reviewResponse.mensagem || reviewResponse
+            );
+            setVoteError("Avaliação registrada, mas não foi possível atualizar seu histórico.");
+          } else if (reviewResponse.dados && typeof window !== "undefined") {
+            try {
+              window.localStorage.setItem(
+                "authUserProfile",
+                JSON.stringify(reviewResponse.dados)
+              );
+            } catch (storageError) {
+              console.warn("Não foi possível atualizar o perfil no storage:", storageError);
+            }
+          }
+        } catch (reviewError) {
+          console.error("Erro ao registrar avaliação do usuário:", reviewError);
+          setVoteError(
+            reviewError instanceof Error
+              ? reviewError.message
+              : "Avaliação registrada, mas não foi possível atualizar seu histórico."
+          );
+        }
+      }
     } catch (error) {
       console.error("Erro ao salvar voto:", error);
       setVoteError(
@@ -255,14 +317,19 @@ export default function GamePage() {
                       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                         <div className="flex items-center gap-4">
                           <Rating
-                            rating={0}
+                            rating={ratingPercent}
                             size="lg"
-                            interactive
+                            interactive={userId != null}
                             onRate={handleVote}
                             userVote={userVote}
                           />
                         </div>
-                        {userVote !== 0 && (
+                        {userId == null && (
+                          <p className="text-sm text-muted-foreground">
+                            Faça login para avaliar este jogo.
+                          </p>
+                        )}
+                        {userId != null && userVote !== 0 && (
                           <Button
                             onClick={handleSaveVote}
                             disabled={isSubmittingVote}
@@ -318,7 +385,6 @@ export default function GamePage() {
                           )}
                         </div>
                       </div>
-
                       <div>
                         <div className="flex items-center gap-2 mb-2">
                           <TagIcon className="w-5 h-5 text-secondary" />

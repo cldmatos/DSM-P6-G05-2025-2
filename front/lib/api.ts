@@ -135,10 +135,10 @@ export async function getRandomGame() {
   return apiCall('/games/aleatorio');
 }
 
-export async function rateGame(gameId: number, positiva: boolean) {
+export async function rateGame(gameId: number, positiva: boolean, userId: number) {
   return apiCall(`/games/${gameId}/rate`, {
     method: 'POST',
-    body: JSON.stringify({ positiva }),
+    body: JSON.stringify({ positiva, userId }),
   });
 }
 

@@ -16,6 +16,8 @@ Este projeto implementa uma arquitetura **Gateway Pattern** para um sistema de r
 
 Link do figma: https://www.figma.com/design/WSYaFQDZLzn7eGapg4YAkr/Game-List?node-id=0-1&t=qrxOnPnj2qqmn7LW-1
 
+Link do vídeo: https://www.youtube.com/watch?v=oW0DU3UusaM
+
 ### 🎯 Funcionalidades Principais
 
 ✅ Recomendações personalizadas por categorias  
@@ -164,7 +166,7 @@ npm run dev
 
 ```bash
 cd machine
-python api_game.py
+python api_game.py & python pubsub_worker.py
 
 # Esperado:
 # 🚀 Iniciando servidor Flask...
@@ -700,7 +702,3 @@ MIT
 - **Frontend:** Next.js + React
 - **Mobile:** React Native + Expo
 - **Banco:** Azure MySQL
-
----
-
-**Status:** ✅ **PRONTO PARA PRODUÇÃO**

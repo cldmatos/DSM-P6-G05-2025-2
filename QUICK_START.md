@@ -91,7 +91,7 @@ npm run dev
 
 ```bash
 cd machine
-python api_game.py
+python api_game.py & python pubsub_worker.py
 
 # Esperado em ~10 segundos:
 # 🚀 Iniciando servidor Flask...

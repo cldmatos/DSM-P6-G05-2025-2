@@ -100,15 +100,30 @@ export default function UserPage() {
 
   const ratedGames = useMemo(() => userProfile?.avaliacoes ?? [], [userProfile]);
 
-  const averageRating = useMemo(() => {
+  const totalRatedGames = useMemo(() => {
+    const totalFromStats = userProfile?.estatisticas?.totalAvaliacoes;
+    if (typeof totalFromStats === "number" && Number.isFinite(totalFromStats)) {
+      return totalFromStats;
+    }
+    return ratedGames.length;
+  }, [ratedGames, userProfile?.estatisticas?.totalAvaliacoes]);
+
+  const averageRatingValue = useMemo(() => {
     const media = userProfile?.estatisticas?.notaMedia;
     if (typeof media === "number" && !Number.isNaN(media)) {
-      return media.toFixed(1);
+      return media;
     }
-    if (!ratedGames.length) return "-";
+    if (!ratedGames.length) return null;
     const total = ratedGames.reduce((acc, game) => acc + (game.nota ?? 0), 0);
-    return (total / ratedGames.length).toFixed(1);
+    return total / ratedGames.length;
   }, [ratedGames, userProfile?.estatisticas?.notaMedia]);
+
+  const averageRatingLabel = useMemo(() => {
+    if (averageRatingValue == null) {
+      return "-";
+    }
+    return averageRatingValue.toFixed(1);
+  }, [averageRatingValue]);
 
   const handleGameClick = (gameId: number) => {
     if (!gameId) return;
@@ -222,13 +237,14 @@ export default function UserPage() {
                     <div className="flex flex-wrap justify-center md:justify-start gap-4">
                       <div className="bg-primary/10 border border-primary/30 rounded-xl px-6 py-3">
                         <p className="text-3xl font-bold text-primary">
-                          {userProfile.estatisticas.totalAvaliacoes}
+                          {totalRatedGames}
                         </p>
                         <p className="text-sm text-muted">Jogos Avaliados</p>
                       </div>
                       <div className="bg-secondary/10 border border-secondary/30 rounded-xl px-6 py-3">
                         <p className="text-3xl font-bold text-secondary">
-                          {averageRating}
+                          {averageRatingLabel}
+                          {averageRatingLabel !== "-" ? "%" : ""}
                         </p>
                         <p className="text-sm text-muted">Nota Média</p>
                       </div>
@@ -297,7 +313,7 @@ export default function UserPage() {
                 ))}
               </div>
 
-              {ratedGames.length === 0 && (
+              {totalRatedGames === 0 && (
                 <div className="text-center py-16">
                   <p className="text-muted text-lg">
                     Nenhum jogo avaliado ainda.

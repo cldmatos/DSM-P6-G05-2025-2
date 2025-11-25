@@ -257,8 +257,11 @@ class ApiService {
     return response.data;
   }
 
-  async rateGame(gameId: number, positiva: boolean) {
-    const response = await this.api.post(`/games/${gameId}/rate`, { positiva });
+  async rateGame(gameId: number, positiva: boolean, userId: number) {
+    const response = await this.api.post(`/games/${gameId}/rate`, {
+      positiva,
+      userId,
+    });
     return response.data;
   }
 
